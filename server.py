@@ -1,11 +1,10 @@
-from flask import Flask, send_file
+from flask import Flask
 
 app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return send_file("index.html")
+    return "Servidor funcionando correctamente, Señor"
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
-

@@ -2,65 +2,30 @@
 <html>
 <head>
     <title>Jarvis</title>
-    <style>
-        body {
-            background: black;
-            color: #00ffe1;
-            font-family: Arial;
-            text-align: center;
-        }
-
-        #chat {
-            margin-top: 50px;
-        }
-
-        input {
-            padding: 10px;
-            width: 60%;
-            border: none;
-            border-radius: 5px;
-        }
-
-        button {
-            padding: 10px;
-            background: #00ffe1;
-            border: none;
-            cursor: pointer;
-        }
-
-        #respuesta {
-            margin-top: 20px;
-        }
-    </style>
 </head>
 <body>
 
-    <h1>J.A.R.V.I.S.</h1>
+<h1>Jarvis activo</h1>
 
-    <div id="chat">
-        <input id="pregunta" placeholder="Escriba su pregunta, Señor">
-        <button onclick="enviar()">Preguntar</button>
+<input id="pregunta" placeholder="Escribe aquí, Señor">
+<button onclick="enviar()">Preguntar</button>
 
-        <div id="respuesta"></div>
-    </div>
+<div id="respuesta"></div>
 
-    <script>
-        async function enviar() {
-            let pregunta = document.getElementById("pregunta").value;
+<script>
+async function enviar() {
+    let pregunta = document.getElementById("pregunta").value;
 
-            let res = await fetch("/preguntar", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ pregunta: pregunta })
-            });
+    let res = await fetch("/preguntar", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({pregunta})
+    });
 
-            let data = await res.json();
-
-            document.getElementById("respuesta").innerText = data.respuesta;
-        }
-    </script>
+    let data = await res.json();
+    document.getElementById("respuesta").innerText = data.respuesta;
+}
+</script>
 
 </body>
 </html>

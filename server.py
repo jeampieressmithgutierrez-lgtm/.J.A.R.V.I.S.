@@ -23,7 +23,7 @@ def chat():
 
     try:
         completion = client.chat.completions.create(
-            model="llama3-70b-8192",
+            model="llama-3.1-8b-instant",
             messages=[
                 {"role": "system", "content": "Eres JARVIS, un asistente elegante, preciso y directo."},
                 {"role": "user", "content": mensaje}

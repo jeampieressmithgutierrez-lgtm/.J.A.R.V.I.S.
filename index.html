@@ -1,31 +1,39 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Jarvis</title>
-</head>
-<body>
+from flask import Flask, request, jsonify, send_from_directory
+import os
+from groq import Groq
 
-<h1>Jarvis activo</h1>
+app = Flask(__name__)
 
-<input id="pregunta" placeholder="Escribe aquí, Señor">
-<button onclick="enviar()">Preguntar</button>
+# Cliente GROQ (toma la API desde Render)
+client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-<div id="respuesta"></div>
+# 🔹 Ruta principal → carga el diseño (index.html)
+@app.route("/")
+def home():
+    return send_from_directory(".", "index.html")
 
-<script>
-async function enviar() {
-    let pregunta = document.getElementById("pregunta").value;
+# 🔹 Ruta de chat (IA)
+@app.route("/chat", methods=["POST"])
+def chat():
+    data = request.json
+    mensaje = data.get("message")
 
-    let res = await fetch("/preguntar", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({pregunta})
-    });
+    try:
+        response = client.chat.completions.create(
+            model="llama3-70b-8192",
+            messages=[
+                {"role": "system", "content": "Eres JARVIS, elegante, directo y útil."},
+                {"role": "user", "content": mensaje}
+            ]
+        )
 
-    let data = await res.json();
-    document.getElementById("respuesta").innerText = data.respuesta;
-}
-</script>
+        respuesta = response.choices[0].message.content
 
-</body>
-</html>
+        return jsonify({"reply": respuesta})
+
+    except Exception as e:
+        return jsonify({"reply": f"Error: {str(e)}"})
+
+# 🔹 Ejecutar servidor
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)

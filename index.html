@@ -1,39 +1,78 @@
-from flask import Flask, request, jsonify, send_from_directory
-import os
-from groq import Groq
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>JARVIS AI</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f0f0f;
+      color: white;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+    }
 
-app = Flask(__name__)
+    #chat {
+      width: 90%;
+      max-width: 600px;
+      margin: auto;
+      margin-top: 20px;
+    }
 
-# Cliente GROQ (toma la API desde Render)
-client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+    .msg {
+      background: #1f1f1f;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 10px;
+      text-align: left;
+    }
 
-# 🔹 Ruta principal → carga el diseño (index.html)
-@app.route("/")
-def home():
-    return send_from_directory(".", "index.html")
+    input {
+      width: 70%;
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+    }
 
-# 🔹 Ruta de chat (IA)
-@app.route("/chat", methods=["POST"])
-def chat():
-    data = request.json
-    mensaje = data.get("message")
+    button {
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
 
-    try:
-        response = client.chat.completions.create(
-            model="llama3-70b-8192",
-            messages=[
-                {"role": "system", "content": "Eres JARVIS, elegante, directo y útil."},
-                {"role": "user", "content": mensaje}
-            ]
-        )
+<h1>JARVIS AI</h1>
 
-        respuesta = response.choices[0].message.content
+<div id="chat"></div>
 
-        return jsonify({"reply": respuesta})
+<input id="input" placeholder="Escribe tu pregunta...">
+<button onclick="send()">Enviar</button>
 
-    except Exception as e:
-        return jsonify({"reply": f"Error: {str(e)}"})
+<script>
+async function send() {
+  let text = document.getElementById("input").value;
 
-# 🔹 Ejecutar servidor
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+  document.getElementById("chat").innerHTML +=
+    "<div class='msg'><b>Tú:</b> " + text + "</div>";
+
+  let res = await fetch("/chat", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({message: text})
+  });
+
+  let data = await res.json();
+
+  document.getElementById("chat").innerHTML +=
+    "<div class='msg'><b>Jarvis:</b> " + data.reply + "</div>";
+
+  document.getElementById("input").value = "";
+}
+</script>
+
+</body>
+</html>

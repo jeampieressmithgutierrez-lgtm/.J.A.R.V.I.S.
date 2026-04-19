@@ -1,19 +1,32 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify
+import os
+from groq import Groq
 
 app = Flask(__name__)
 
+client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+
 @app.route("/")
 def home():
-    return send_file("index.html")
+    return "Servidor activo, Señor."
 
-@app.route("/preguntar", methods=["POST"])
-def preguntar():
-    data = request.get_json()
-    pregunta = data.get("pregunta", "")
+@app.route("/chat", methods=["POST"])
+def chat():
+    data = request.json
+    mensaje = data.get("mensaje")
 
-    respuesta = f"Señor, usted dijo: {pregunta}"
+    try:
+        response = client.chat.completions.create(
+            model="llama3-70b-8192",
+            messages=[
+                {"role": "system", "content": "Responde como JARVIS, elegante y directo."},
+                {"role": "user", "content": mensaje}
+            ]
+        )
 
-    return jsonify({"respuesta": respuesta})
+        respuesta = response.choices[0].message.content
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+        return jsonify({"respuesta": respuesta})
+
+    except Exception as e:
+        return jsonify({"error": str(e)})

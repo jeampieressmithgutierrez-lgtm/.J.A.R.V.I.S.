@@ -1,21 +1,27 @@
 from flask import Flask, request, jsonify, send_from_directory
-import requests
+from groq import Groq
 import os
 
 app = Flask(__name__, static_folder='.')
 
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-# 🧠 memoria de conversación
+# 🧠 MODELOS EN CASCADA (anti-decomiso)
+MODELS = [
+    "llama3-70b-8192",   # principal
+    "llama3-8b-8192",    # respaldo rápido
+    "gemma2-9b-it"       # respaldo alternativo
+]
+
+# 🧠 memoria simple
 chat_memory = []
 
-# 🖥️ SERVIR FRONTEND
+# 🖥️ FRONTEND (NO TOCA SU DISEÑO)
 @app.route("/")
 def home():
     return send_from_directory('.', 'index.html')
 
-
-# 🤖 CHAT IA
+# 🤖 CHAT
 @app.route("/chat", methods=["POST"])
 def chat():
     global chat_memory
@@ -24,54 +30,55 @@ def chat():
     user_message = data.get("message", "").strip()
 
     if not user_message:
-        return jsonify({"reply": "⚠️ Señor, envíe un mensaje válido."})
+        return jsonify({"reply": "⚠️ Señor, escriba algo válido."})
 
     chat_memory.append({"role": "user", "content": user_message})
 
-    # limitar memoria (últimos 6 mensajes)
+    # limitar memoria
     if len(chat_memory) > 6:
         chat_memory = chat_memory[-6:]
 
-    try:
-        response = requests.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {GROQ_API_KEY}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": "llama3-8b-8192",
-                "messages": [
+    last_error = None
+
+    # 🔁 INTENTA CON VARIOS MODELOS
+    for model in MODELS:
+        try:
+            print("🧠 Probando modelo:", model)
+
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
                     {
                         "role": "system",
                         "content": (
-                            "Eres JARVIS, asistente de alta precisión. "
-                            "Respondes de forma elegante, clara y estructurada. "
-                            "Usas títulos, subtítulos, emojis y explicaciones útiles. "
-                            "No das respuestas simples: analizas, mejoras ideas y das recomendaciones."
+                            "Eres JARVIS, asistente elegante, directo y analítico. "
+                            "Respondes con estructura clara, usando títulos, emojis y explicaciones útiles. "
+                            "Das recomendaciones y mejoras las ideas del usuario."
                         )
                     }
-                ] + chat_memory,
-                "temperature": 0.7
-            }
-        )
+                ] + chat_memory
+            )
 
-        data = response.json()
+            reply = response.choices[0].message.content
 
-        # validación fuerte
-        if "choices" not in data:
-            return jsonify({"reply": f"⚠️ Error en IA: {data}"})
+            chat_memory.append({"role": "assistant", "content": reply})
 
-        reply = data["choices"][0]["message"]["content"]
+            print("✅ Modelo exitoso:", model)
 
-        chat_memory.append({"role": "assistant", "content": reply})
+            return jsonify({"reply": reply})
 
-        return jsonify({"reply": reply})
+        except Exception as e:
+            print("❌ Falló modelo:", model, "→", str(e))
+            last_error = str(e)
 
-    except Exception as e:
-        return jsonify({"reply": f"⚠️ Error crítico: {str(e)}"})
+    # 🚨 SI TODOS FALLAN
+    return jsonify({
+        "reply": "⚠️ Señor, todos los modelos fallaron. Intente nuevamente.",
+        "error": last_error
+    })
 
 
-# ⚙️ PARA RENDER
+# 🚀 RENDER
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)

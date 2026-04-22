@@ -4,19 +4,23 @@ import os
 
 app = Flask(__name__, static_folder='.')
 
-client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+# 🔑 VALIDACIÓN DE API KEY
+api_key = os.environ.get("GROQ_API_KEY")
+if not api_key:
+    raise ValueError("⚠️ Señor, falta configurar GROQ_API_KEY en Render.")
 
-# 🧠 MODELOS EN CASCADA (anti-decomiso)
+client = Groq(api_key=api_key)
+
+# 🧠 MODELOS EN CASCADA (ACTUALIZADOS Y ESTABLES)
 MODELS = [
-    "llama3-70b-8192",   # principal
-    "llama3-8b-8192",    # respaldo rápido
-    "gemma2-9b-it"       # respaldo alternativo
+    "llama-3.3-70b-versatile",   # 🔥 el mejor actual
+    "llama-3.1-8b-instant"       # ⚡ rápido y estable
 ]
 
 # 🧠 memoria simple
 chat_memory = []
 
-# 🖥️ FRONTEND (NO TOCA SU DISEÑO)
+# 🖥️ FRONTEND
 @app.route("/")
 def home():
     return send_from_directory('.', 'index.html')
@@ -34,13 +38,12 @@ def chat():
 
     chat_memory.append({"role": "user", "content": user_message})
 
-    # limitar memoria
     if len(chat_memory) > 6:
         chat_memory = chat_memory[-6:]
 
     last_error = None
 
-    # 🔁 INTENTA CON VARIOS MODELOS
+    # 🔁 INTENTO DE MODELOS
     for model in MODELS:
         try:
             print("🧠 Probando modelo:", model)
@@ -56,7 +59,9 @@ def chat():
                             "Das recomendaciones y mejoras las ideas del usuario."
                         )
                     }
-                ] + chat_memory
+                ] + chat_memory,
+                temperature=0.7,
+                max_tokens=1024
             )
 
             reply = response.choices[0].message.content
@@ -71,9 +76,9 @@ def chat():
             print("❌ Falló modelo:", model, "→", str(e))
             last_error = str(e)
 
-    # 🚨 SI TODOS FALLAN
+    # 🚨 SI TODO FALLA
     return jsonify({
-        "reply": "⚠️ Señor, todos los modelos fallaron. Intente nuevamente.",
+        "reply": "⚠️ Señor, todos los modelos fallaron. Revise la API Key o el servicio.",
         "error": last_error
     })
 

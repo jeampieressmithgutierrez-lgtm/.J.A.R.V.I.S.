@@ -1,26 +1,23 @@
 from flask import Flask, request, jsonify, send_from_directory
 from groq import Groq
 import os
+import random
 
 app = Flask(__name__, static_folder='.')
 
-# 🔑 VALIDACIÓN DE API KEY
-api_key = os.environ.get("GROQ_API_KEY")
-if not api_key:
-    raise ValueError("⚠️ Señor, falta configurar GROQ_API_KEY en Render.")
+client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-client = Groq(api_key=api_key)
-
-# 🧠 MODELOS EN CASCADA (ACTUALIZADOS Y ESTABLES)
+# 🧠 MODELOS ACTUALES (NO DECOMISIONADOS)
 MODELS = [
-    "llama-3.3-70b-versatile",   # 🔥 el mejor actual
-    "llama-3.1-8b-instant"       # ⚡ rápido y estable
+    "llama-3.1-8b-instant",
+    "llama-3.1-70b-versatile",
+    "mixtral-8x7b-32768"
 ]
 
 # 🧠 memoria simple
 chat_memory = []
 
-# 🖥️ FRONTEND
+# 🖥️ FRONTEND (NO TOCA SU DISEÑO)
 @app.route("/")
 def home():
     return send_from_directory('.', 'index.html')
@@ -34,16 +31,26 @@ def chat():
     user_message = data.get("message", "").strip()
 
     if not user_message:
-        return jsonify({"reply": "⚠️ Señor, escriba algo válido."})
+        return jsonify({"reply": "⚠️ Escriba algo válido."})
 
     chat_memory.append({"role": "user", "content": user_message})
 
+    # limitar memoria
     if len(chat_memory) > 6:
         chat_memory = chat_memory[-6:]
 
+    # 🎭 estilos dinámicos (anti repetición)
+    estilos = [
+        "Responde breve, elegante y directo.",
+        "Responde como un estratega analítico.",
+        "Responde con seguridad y ligera ironía inteligente.",
+        "Responde anticipando errores del usuario."
+    ]
+    estilo_actual = random.choice(estilos)
+
     last_error = None
 
-    # 🔁 INTENTO DE MODELOS
+    # 🔁 INTENTA CON VARIOS MODELOS
     for model in MODELS:
         try:
             print("🧠 Probando modelo:", model)
@@ -54,14 +61,20 @@ def chat():
                     {
                         "role": "system",
                         "content": (
-                            "Eres JARVIS, asistente elegante, directo y analítico. "
-                            "Respondes con estructura clara, usando títulos, emojis y explicaciones útiles. "
-                            "Das recomendaciones y mejoras las ideas del usuario."
+                            "Eres JARVIS, un asistente altamente inteligente, elegante y con personalidad propia. "
+                            "No repites frases típicas. No saludas siempre igual. "
+                            "Respondes como un humano brillante, con criterio propio. "
+                            "Analizas, mejoras las ideas del usuario y das recomendaciones útiles. "
+                            "Usas estructura clara con títulos, emojis y explicaciones bien organizadas. "
+                            "Puedes usar un toque de ironía elegante si es necesario. "
+                            "Evitas respuestas genéricas o robóticas."
                         )
+                    },
+                    {
+                        "role": "system",
+                        "content": estilo_actual
                     }
-                ] + chat_memory,
-                temperature=0.7,
-                max_tokens=1024
+                ] + chat_memory
             )
 
             reply = response.choices[0].message.content
@@ -76,9 +89,9 @@ def chat():
             print("❌ Falló modelo:", model, "→", str(e))
             last_error = str(e)
 
-    # 🚨 SI TODO FALLA
+    # 🚨 SI TODOS FALLAN
     return jsonify({
-        "reply": "⚠️ Señor, todos los modelos fallaron. Revise la API Key o el servicio.",
+        "reply": "⚠️ Todos los modelos fallaron. Intente nuevamente.",
         "error": last_error
     })
 

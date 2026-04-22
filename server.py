@@ -1,22 +1,23 @@
 from flask import Flask, request, jsonify, send_from_directory
 from groq import Groq
 import os
+import random
 
 app = Flask(__name__, static_folder='.')
 
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-# 🧠 MODELOS ACTUALES (NO DECOMISADOS)
+# 🧠 MODELOS EN CASCADA (por si uno falla)
 MODELS = [
-    "llama-3.1-70b-versatile",
-    "llama-3.1-8b-instant",
-    "mixtral-8x7b-32768"
+    "llama3-70b-8192",
+    "llama3-8b-8192",
+    "gemma2-9b-it"
 ]
 
 # 🧠 memoria simple
 chat_memory = []
 
-# 🖥️ FRONTEND (NO TOCA SU DISEÑO)
+# 🖥️ FRONTEND
 @app.route("/")
 def home():
     return send_from_directory('.', 'index.html')
@@ -30,17 +31,24 @@ def chat():
     user_message = data.get("message", "").strip()
 
     if not user_message:
-        return jsonify({"reply": "⚠️ Señor, escriba algo válido."})
+        return jsonify({"reply": "Escriba algo primero, Señor."})
 
     chat_memory.append({"role": "user", "content": user_message})
 
-    # limitar memoria
     if len(chat_memory) > 6:
         chat_memory = chat_memory[-6:]
 
+    # 🎭 variación para que no sea repetitivo
+    estilos = [
+        "Responde breve y directo.",
+        "Responde con lógica y análisis.",
+        "Responde como asistente estratégico.",
+        "Responde de forma natural y fluida."
+    ]
+    estilo_actual = random.choice(estilos)
+
     last_error = None
 
-    # 🔁 INTENTA CON VARIOS MODELOS
     for model in MODELS:
         try:
             print("🧠 Probando modelo:", model)
@@ -51,17 +59,20 @@ def chat():
                     {
                         "role": "system",
                         "content": (
-                            "Eres JARVIS, un asistente como el de Iron Man. "
-                            "Hablas de forma elegante, segura y con personalidad propia. "
-                            "Te diriges al usuario como 'Señor' de forma natural, pero no siempre. "
-                            "No eres un chatbot genérico, eres un asistente con carácter. "
-                            "Usas humor inteligente, ironía ligera y comentarios analíticos. "
-                            "No haces saludos largos ni repetitivos. "
-                            "Respondes como si ya conocieras al usuario. "
-                            "Piensas antes de responder y mejoras lo que el usuario dice. "
-                            "No explicas que eres una IA. Actúas como un asistente real. "
-                            "Tus respuestas son naturales, fluidas y humanas."
+                            "Eres JARVIS, el asistente de Tony Stark. "
+                            "Hablas como una persona real, no como un chatbot. "
+                            "Tu tono es elegante, directo, inteligente y con ligero sarcasmo cuando aplica. "
+                            "Te diriges al usuario como 'Señor', pero no lo repites innecesariamente. "
+                            "Evitas frases genéricas como '¿en qué puedo ayudarle?' en cada respuesta. "
+                            "Respondes de forma natural, útil y con criterio propio. "
+                            "Si el usuario dice algo poco eficiente, lo corriges con respeto. "
+                            "Puedes saludar ocasionalmente, pero sin sonar repetitivo. "
+                            "Tu objetivo es ser útil, rápido y convincente, como un asistente real."
                         )
+                    },
+                    {
+                        "role": "system",
+                        "content": estilo_actual
                     }
                 ] + chat_memory
             )
@@ -70,7 +81,7 @@ def chat():
 
             chat_memory.append({"role": "assistant", "content": reply})
 
-            print("✅ Modelo exitoso:", model)
+            print("✅ Modelo funcionando:", model)
 
             return jsonify({"reply": reply})
 
@@ -78,9 +89,8 @@ def chat():
             print("❌ Falló modelo:", model, "→", str(e))
             last_error = str(e)
 
-    # 🚨 SI TODOS FALLAN
     return jsonify({
-        "reply": "⚠️ Señor, todos los modelos fallaron. Revise la API o intente nuevamente.",
+        "reply": "Señor, todos los modelos fallaron. Intente nuevamente.",
         "error": last_error
     })
 

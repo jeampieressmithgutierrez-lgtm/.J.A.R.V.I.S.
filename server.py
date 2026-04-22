@@ -1,27 +1,34 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 import requests
 import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='.')
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
-# memoria simple (últimos mensajes)
+# 🧠 memoria de conversación
 chat_memory = []
 
+# 🖥️ SERVIR FRONTEND
 @app.route("/")
 def home():
-    return "Servidor activo, señor."
+    return send_from_directory('.', 'index.html')
 
+
+# 🤖 CHAT IA
 @app.route("/chat", methods=["POST"])
 def chat():
     global chat_memory
 
-    user_message = request.json.get("message")
+    data = request.get_json()
+    user_message = data.get("message", "").strip()
+
+    if not user_message:
+        return jsonify({"reply": "⚠️ Señor, envíe un mensaje válido."})
 
     chat_memory.append({"role": "user", "content": user_message})
 
-    # limitar memoria
+    # limitar memoria (últimos 6 mensajes)
     if len(chat_memory) > 6:
         chat_memory = chat_memory[-6:]
 
@@ -37,13 +44,23 @@ def chat():
                 "messages": [
                     {
                         "role": "system",
-                        "content": "Eres JARVIS: elegante, claro, con emojis, respuestas estructuradas con títulos."
+                        "content": (
+                            "Eres JARVIS, asistente de alta precisión. "
+                            "Respondes de forma elegante, clara y estructurada. "
+                            "Usas títulos, subtítulos, emojis y explicaciones útiles. "
+                            "No das respuestas simples: analizas, mejoras ideas y das recomendaciones."
+                        )
                     }
-                ] + chat_memory
+                ] + chat_memory,
+                "temperature": 0.7
             }
         )
 
         data = response.json()
+
+        # validación fuerte
+        if "choices" not in data:
+            return jsonify({"reply": f"⚠️ Error en IA: {data}"})
 
         reply = data["choices"][0]["message"]["content"]
 
@@ -52,4 +69,9 @@ def chat():
         return jsonify({"reply": reply})
 
     except Exception as e:
-        return jsonify({"reply": f"Error en IA: {str(e)}"})
+        return jsonify({"reply": f"⚠️ Error crítico: {str(e)}"})
+
+
+# ⚙️ PARA RENDER
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)

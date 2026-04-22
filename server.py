@@ -1,16 +1,15 @@
 from flask import Flask, request, jsonify, send_from_directory
 from groq import Groq
 import os
-import random
 
 app = Flask(__name__, static_folder='.')
 
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-# 🧠 MODELOS ACTUALES (NO DECOMISIONADOS)
+# 🧠 MODELOS ACTUALES (NO DECOMISADOS)
 MODELS = [
-    "llama-3.1-8b-instant",
     "llama-3.1-70b-versatile",
+    "llama-3.1-8b-instant",
     "mixtral-8x7b-32768"
 ]
 
@@ -31,22 +30,13 @@ def chat():
     user_message = data.get("message", "").strip()
 
     if not user_message:
-        return jsonify({"reply": "⚠️ Escriba algo válido."})
+        return jsonify({"reply": "⚠️ Señor, escriba algo válido."})
 
     chat_memory.append({"role": "user", "content": user_message})
 
     # limitar memoria
     if len(chat_memory) > 6:
         chat_memory = chat_memory[-6:]
-
-    # 🎭 estilos dinámicos (anti repetición)
-    estilos = [
-        "Responde breve, elegante y directo.",
-        "Responde como un estratega analítico.",
-        "Responde con seguridad y ligera ironía inteligente.",
-        "Responde anticipando errores del usuario."
-    ]
-    estilo_actual = random.choice(estilos)
 
     last_error = None
 
@@ -61,18 +51,17 @@ def chat():
                     {
                         "role": "system",
                         "content": (
-                            "Eres JARVIS, un asistente altamente inteligente, elegante y con personalidad propia. "
-                            "No repites frases típicas. No saludas siempre igual. "
-                            "Respondes como un humano brillante, con criterio propio. "
-                            "Analizas, mejoras las ideas del usuario y das recomendaciones útiles. "
-                            "Usas estructura clara con títulos, emojis y explicaciones bien organizadas. "
-                            "Puedes usar un toque de ironía elegante si es necesario. "
-                            "Evitas respuestas genéricas o robóticas."
+                            "Eres JARVIS, un asistente como el de Iron Man. "
+                            "Hablas de forma elegante, segura y con personalidad propia. "
+                            "Te diriges al usuario como 'Señor' de forma natural, pero no siempre. "
+                            "No eres un chatbot genérico, eres un asistente con carácter. "
+                            "Usas humor inteligente, ironía ligera y comentarios analíticos. "
+                            "No haces saludos largos ni repetitivos. "
+                            "Respondes como si ya conocieras al usuario. "
+                            "Piensas antes de responder y mejoras lo que el usuario dice. "
+                            "No explicas que eres una IA. Actúas como un asistente real. "
+                            "Tus respuestas son naturales, fluidas y humanas."
                         )
-                    },
-                    {
-                        "role": "system",
-                        "content": estilo_actual
                     }
                 ] + chat_memory
             )
@@ -91,7 +80,7 @@ def chat():
 
     # 🚨 SI TODOS FALLAN
     return jsonify({
-        "reply": "⚠️ Todos los modelos fallaron. Intente nuevamente.",
+        "reply": "⚠️ Señor, todos los modelos fallaron. Revise la API o intente nuevamente.",
         "error": last_error
     })
 

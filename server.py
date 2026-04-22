@@ -1,42 +1,55 @@
-from flask import Flask, request, jsonify, send_from_directory
-from groq import Groq
+from flask import Flask, request, jsonify
+import requests
 import os
 
 app = Flask(__name__)
 
-# 🔑 Cliente Groq
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
-# 🌐 Página principal
+# memoria simple (últimos mensajes)
+chat_memory = []
+
 @app.route("/")
 def home():
-    return send_from_directory(".", "index.html")
+    return "Servidor activo, señor."
 
-# 🤖 Chat IA real
 @app.route("/chat", methods=["POST"])
 def chat():
-    data = request.json
-    mensaje = data.get("message", "")
+    global chat_memory
 
-    if not mensaje:
-        return jsonify({"reply": "Señor, no recibí ningún mensaje."})
+    user_message = request.json.get("message")
+
+    chat_memory.append({"role": "user", "content": user_message})
+
+    # limitar memoria
+    if len(chat_memory) > 6:
+        chat_memory = chat_memory[-6:]
 
     try:
-        completion = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
-            messages=[
-                {"role": "system", "content": "Eres JARVIS, un asistente elegante, preciso y directo."},
-                {"role": "user", "content": mensaje}
-            ]
+        response = requests.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "llama-3.1-70b-versatile",
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "Eres JARVIS: elegante, claro, con emojis, respuestas estructuradas con títulos."
+                    }
+                ] + chat_memory
+            }
         )
 
-        respuesta = completion.choices[0].message.content
+        data = response.json()
 
-        return jsonify({"reply": respuesta})
+        reply = data["choices"][0]["message"]["content"]
+
+        chat_memory.append({"role": "assistant", "content": reply})
+
+        return jsonify({"reply": reply})
 
     except Exception as e:
         return jsonify({"reply": f"Error en IA: {str(e)}"})
-
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)

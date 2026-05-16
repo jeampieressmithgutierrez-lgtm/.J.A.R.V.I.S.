@@ -8,9 +8,21 @@
 <style>
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
-    background: radial-gradient(circle at center, #300000, #000000 80%);
+    font-family: 'Segoe UI', sans-serif;
+    background: radial-gradient(circle at top, #1a1200, #000000 80%);
     color: #FFD700;
+}
+
+/* HEADER */
+.header {
+    text-align: center;
+    font-size: 26px;
+    padding: 15px;
+    letter-spacing: 3px;
+    font-weight: bold;
+    background: linear-gradient(to right, transparent, rgba(255,215,0,0.1), transparent);
+    border-bottom: 1px solid rgba(255,215,0,0.2);
+    text-shadow: 0 0 10px rgba(255,215,0,0.5);
 }
 
 /* CONTENEDOR */
@@ -20,108 +32,96 @@ body {
     padding: 15px;
 }
 
-/* TÍTULO */
-h1 {
-    text-align: center;
-    letter-spacing: 2px;
-    text-shadow: 0 0 10px #ff0000;
-}
-
 /* CHAT */
 #chat {
     height: 70vh;
     overflow-y: auto;
-    padding: 10px;
-    border: 1px solid rgba(255, 215, 0, 0.2);
-    border-radius: 10px;
-    background: rgba(0,0,0,0.6);
-    box-shadow: 0 0 20px rgba(255,0,0,0.2);
+    padding: 15px;
+    border-radius: 15px;
+    background: rgba(255, 215, 0, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,215,0,0.2);
+    box-shadow: 0 0 25px rgba(255,215,0,0.1);
 }
 
 /* MENSAJES */
 .message {
     margin: 10px 0;
-    padding: 12px;
-    border-radius: 12px;
+    padding: 12px 15px;
+    border-radius: 15px;
     max-width: 80%;
-    line-height: 1.4;
+    line-height: 1.5;
+    animation: fadeIn 0.3s ease-in-out;
 }
 
 /* USUARIO */
 .user {
-    background: #FFD700;
+    background: linear-gradient(135deg, #FFD700, #ffcc00);
     color: #000;
     margin-left: auto;
     text-align: right;
+    box-shadow: 0 0 10px rgba(255,215,0,0.4);
 }
 
 /* JARVIS */
 .bot {
-    background: rgba(255, 0, 0, 0.15);
-    border-left: 3px solid #ff0000;
+    background: rgba(255, 215, 0, 0.08);
+    border-left: 3px solid #FFD700;
+    backdrop-filter: blur(6px);
 }
 
 /* INPUT */
 .input-area {
     display: flex;
-    margin-top: 10px;
+    margin-top: 12px;
     gap: 10px;
 }
 
 input {
     flex: 1;
     padding: 12px;
-    border-radius: 8px;
-    border: none;
+    border-radius: 10px;
+    border: 1px solid rgba(255,215,0,0.2);
     outline: none;
     font-size: 16px;
-    background: #111;
+    background: rgba(0,0,0,0.6);
     color: #FFD700;
 }
 
 /* BOTÓN */
 button {
     padding: 12px 18px;
-    background: #FFD700;
+    background: linear-gradient(135deg, #FFD700, #ffcc00);
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
     font-weight: bold;
+    box-shadow: 0 0 10px rgba(255,215,0,0.5);
 }
 
-/* EFECTO HOVER */
 button:hover {
-    background: #ffcc00;
+    transform: scale(1.05);
 }
 
-/* 📱 MODO CELULAR */
+/* ANIMACIÓN */
+@keyframes fadeIn {
+    from {opacity: 0; transform: translateY(5px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+
+/* 📱 CELULAR */
 @media (max-width: 600px) {
-
-    .container {
-        padding: 10px;
-    }
-
-    h1 {
-        font-size: 18px;
+    .header {
+        font-size: 20px;
     }
 
     #chat {
         height: 75vh;
-        padding: 8px;
     }
 
     .message {
         max-width: 90%;
         font-size: 14px;
-    }
-
-    input {
-        font-size: 14px;
-        padding: 10px;
-    }
-
-    button {
-        padding: 10px;
     }
 }
 </style>
@@ -129,8 +129,9 @@ button:hover {
 
 <body>
 
+<div class="header">JARVIS AI</div>
+
 <div class="container">
-    <h1>JARVIS AI</h1>
 
     <div id="chat"></div>
 
@@ -138,6 +139,7 @@ button:hover {
         <input id="input" placeholder="Hable, señor...">
         <button onclick="sendMessage()">Enviar</button>
     </div>
+
 </div>
 
 <script>
@@ -151,8 +153,13 @@ async function sendMessage() {
     // Mensaje usuario
     chat.innerHTML += `<div class="message user">${message}</div>`;
     input.value = "";
+    chat.scrollTop = chat.scrollHeight;
 
-    // Scroll automático
+    // Simulación escribiendo
+    const typing = document.createElement("div");
+    typing.className = "message bot";
+    typing.innerText = "Escribiendo...";
+    chat.appendChild(typing);
     chat.scrollTop = chat.scrollHeight;
 
     const response = await fetch("/chat", {
@@ -162,6 +169,9 @@ async function sendMessage() {
     });
 
     const data = await response.json();
+
+    // Quitar "Escribiendo..."
+    chat.removeChild(typing);
 
     // Mensaje bot
     chat.innerHTML += `<div class="message bot">${data.reply}</div>`;

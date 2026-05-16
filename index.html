@@ -2,69 +2,127 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JARVIS AI</title>
 
 <style>
 body {
     margin: 0;
-    font-family: Arial;
-    background: radial-gradient(circle, #1a0000, #000);
+    font-family: Arial, sans-serif;
+    background: radial-gradient(circle at center, #300000, #000000 80%);
     color: #FFD700;
 }
 
+/* CONTENEDOR */
 .container {
-    max-width: 700px;
+    max-width: 900px;
     margin: auto;
-    padding: 20px;
+    padding: 15px;
 }
 
+/* TÍTULO */
 h1 {
     text-align: center;
+    letter-spacing: 2px;
+    text-shadow: 0 0 10px #ff0000;
 }
 
 /* CHAT */
 #chat {
-    height: 400px;
+    height: 70vh;
     overflow-y: auto;
     padding: 10px;
-}
-
-/* BURBUJAS */
-.message {
-    margin: 10px;
-    padding: 10px;
+    border: 1px solid rgba(255, 215, 0, 0.2);
     border-radius: 10px;
-    max-width: 70%;
+    background: rgba(0,0,0,0.6);
+    box-shadow: 0 0 20px rgba(255,0,0,0.2);
 }
 
+/* MENSAJES */
+.message {
+    margin: 10px 0;
+    padding: 12px;
+    border-radius: 12px;
+    max-width: 80%;
+    line-height: 1.4;
+}
+
+/* USUARIO */
 .user {
-    background: #8B0000;
-    color: white;
+    background: #FFD700;
+    color: #000;
     margin-left: auto;
+    text-align: right;
 }
 
+/* JARVIS */
 .bot {
-    background: #111;
-    border: 1px solid gold;
+    background: rgba(255, 0, 0, 0.15);
+    border-left: 3px solid #ff0000;
 }
 
 /* INPUT */
-.input-box {
+.input-area {
     display: flex;
+    margin-top: 10px;
+    gap: 10px;
 }
 
 input {
     flex: 1;
-    padding: 10px;
-    background: black;
-    color: gold;
+    padding: 12px;
+    border-radius: 8px;
     border: none;
+    outline: none;
+    font-size: 16px;
+    background: #111;
+    color: #FFD700;
 }
 
+/* BOTÓN */
 button {
-    padding: 10px;
-    background: gold;
+    padding: 12px 18px;
+    background: #FFD700;
     border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* EFECTO HOVER */
+button:hover {
+    background: #ffcc00;
+}
+
+/* 📱 MODO CELULAR */
+@media (max-width: 600px) {
+
+    .container {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 18px;
+    }
+
+    #chat {
+        height: 75vh;
+        padding: 8px;
+    }
+
+    .message {
+        max-width: 90%;
+        font-size: 14px;
+    }
+
+    input {
+        font-size: 14px;
+        padding: 10px;
+    }
+
+    button {
+        padding: 10px;
+    }
 }
 </style>
 </head>
@@ -72,57 +130,41 @@ button {
 <body>
 
 <div class="container">
-<h1>JARVIS AI</h1>
+    <h1>JARVIS AI</h1>
 
-<div id="chat"></div>
+    <div id="chat"></div>
 
-<div class="input-box">
-<input id="msg" placeholder="Habla, señor...">
-<button onclick="send()">Enviar</button>
-</div>
-
+    <div class="input-area">
+        <input id="input" placeholder="Hable, señor...">
+        <button onclick="sendMessage()">Enviar</button>
+    </div>
 </div>
 
 <script>
-function typeEffect(element, text, speed = 20) {
-    let i = 0;
-    function typing() {
-        if (i < text.length) {
-            element.innerHTML += text.charAt(i);
-            i++;
-            setTimeout(typing, speed);
-        }
-    }
-    typing();
-}
+async function sendMessage() {
+    const input = document.getElementById("input");
+    const chat = document.getElementById("chat");
 
-async function send() {
-    let input = document.getElementById("msg");
-    let chat = document.getElementById("chat");
+    const message = input.value.trim();
+    if (!message) return;
 
-    let text = input.value;
-
-    let userDiv = document.createElement("div");
-    userDiv.className = "message user";
-    userDiv.innerText = text;
-    chat.appendChild(userDiv);
-
-    let botDiv = document.createElement("div");
-    botDiv.className = "message bot";
-    chat.appendChild(botDiv);
-
+    // Mensaje usuario
+    chat.innerHTML += `<div class="message user">${message}</div>`;
     input.value = "";
 
-    let res = await fetch("/chat", {
+    // Scroll automático
+    chat.scrollTop = chat.scrollHeight;
+
+    const response = await fetch("/chat", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({message: text})
+        body: JSON.stringify({message})
     });
 
-    let data = await res.json();
+    const data = await response.json();
 
-    typeEffect(botDiv, data.reply);
-
+    // Mensaje bot
+    chat.innerHTML += `<div class="message bot">${data.reply}</div>`;
     chat.scrollTop = chat.scrollHeight;
 }
 </script>

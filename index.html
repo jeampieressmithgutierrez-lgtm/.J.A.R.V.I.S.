@@ -3,250 +3,218 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JARVIS AI</title>
+<title>JARVIS</title>
 
 <style>
 body {
-  margin: 0;
-  font-family: 'Segoe UI', sans-serif;
-  background: radial-gradient(circle at center, #02131c, #000);
-  overflow: hidden;
-  color: #00f7ff;
+    margin: 0;
+    background: radial-gradient(circle at center, #001018, #000);
+    font-family: Arial, sans-serif;
+    color: #00f7ff;
+    overflow: hidden;
 }
 
-/* PARTÍCULAS */
-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 0;
-}
-
-/* TITULO */
+/* HEADER */
 .header {
-  position: fixed;
-  top: 20px;
-  width: 100%;
-  text-align: center;
-  font-size: 28px;
-  letter-spacing: 4px;
-  color: #00f7ff;
-  text-shadow: 0 0 15px #00f7ff;
-  z-index: 2;
+    text-align: center;
+    padding: 15px;
+    font-size: 22px;
+    letter-spacing: 5px;
+    text-shadow: 0 0 10px #00f7ff;
+}
+
+/* PARTICULAS */
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 /* REACTOR */
-.reactor {
-  position: absolute;
-  top: 45%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #00f7ff, #003a44);
-  box-shadow: 0 0 60px #00f7ff, inset 0 0 40px #00f7ff;
-  animation: pulse 2s infinite ease-in-out;
-  z-index: 1;
+.arc-reactor {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    box-shadow: 
+        0 0 40px #00f7ff,
+        inset 0 0 30px #00f7ff;
+    animation: pulse 2s infinite;
+}
+
+.arc-reactor::before {
+    content: "";
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    top: 30px;
+    left: 30px;
+    border-radius: 50%;
+    border: 3px solid #00f7ff;
+    animation: spin 4s linear infinite;
+}
+
+.arc-reactor::after {
+    content: "";
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    top: 60px;
+    left: 60px;
+    border-radius: 50%;
+    background: #00f7ff;
+    box-shadow: 0 0 20px #00f7ff;
+}
+
+/* ANIMACIONES */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 @keyframes pulse {
-  0%,100% { transform: translate(-50%, -50%) scale(1); }
-  50% { transform: translate(-50%, -50%) scale(1.1); }
+    0%,100% { box-shadow: 0 0 30px #00f7ff; }
+    50% { box-shadow: 0 0 60px #00f7ff; }
 }
 
 /* CHAT */
 .chat {
-  position: fixed;
-  bottom: 100px;
-  width: 100%;
-  max-height: 60%;
-  overflow-y: auto;
-  padding: 10px;
-  z-index: 2;
+    position: absolute;
+    bottom: 80px;
+    width: 100%;
+    max-height: 40%;
+    overflow-y: auto;
+    padding: 10px;
 }
 
-.message {
-  max-width: 70%;
-  padding: 10px 15px;
-  margin: 10px;
-  border-radius: 20px;
-  animation: fadeIn 0.3s ease;
+.msg {
+    margin: 8px;
+    padding: 10px;
+    border-radius: 15px;
+    max-width: 70%;
 }
 
 .user {
-  background: #00f7ff;
-  color: black;
-  margin-left: auto;
+    background: #00f7ff;
+    color: black;
+    margin-left: auto;
 }
 
-.bot {
-  border: 1px solid #00f7ff;
-}
-
-@keyframes fadeIn {
-  from {opacity:0; transform: translateY(10px);}
-  to {opacity:1;}
+.jarvis {
+    border: 1px solid #00f7ff;
 }
 
 /* INPUT */
-.input-area {
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 50%;
-  display: flex;
-  gap: 10px;
-  z-index: 2;
-  transition: 0.4s;
-}
-
-.input-area.active {
-  bottom: 20px;
+.input-box {
+    position: absolute;
+    bottom: 20px;
+    width: 90%;
+    left: 5%;
+    display: flex;
 }
 
 input {
-  padding: 12px;
-  border-radius: 20px;
-  border: none;
-  width: 220px;
-  outline: none;
+    flex: 1;
+    padding: 10px;
+    border-radius: 20px;
+    border: none;
 }
 
 button {
-  background: #00f7ff;
-  border: none;
-  border-radius: 50%;
-  width: 45px;
-  height: 45px;
-  cursor: pointer;
+    margin-left: 10px;
+    border: none;
+    background: #00f7ff;
+    border-radius: 50%;
+    width: 45px;
 }
-
-/* EFECTO ESCRITURA */
-.typing::after {
-  content: "|";
-  animation: blink 1s infinite;
-}
-
-@keyframes blink {
-  50% {opacity: 0;}
-}
-
 </style>
 </head>
 
 <body>
 
+<div class="header">J.A.R.V.I.S.</div>
+
 <canvas id="particles"></canvas>
 
-<div class="header">J.A.R.V.I.S.</div>
-<div class="reactor"></div>
+<div class="arc-reactor"></div>
 
 <div class="chat" id="chat"></div>
 
-<div class="input-area" id="inputArea">
-  <input id="input" placeholder="Hable, señor...">
-  <button onclick="send()">➤</button>
+<div class="input-box">
+    <input id="input" placeholder="Hable, señor...">
+    <button onclick="send()">➤</button>
 </div>
 
 <script>
-const chat = document.getElementById("chat");
-const input = document.getElementById("input");
-const inputArea = document.getElementById("inputArea");
-
-/* RESPUESTAS INTELIGENTES */
-function getResponse(text){
-  text = text.toLowerCase();
-
-  if(text.includes("hola")) return "Saludos, señor.";
-  if(text.includes("que haces")) return "Observando y optimizando, como siempre.";
-  if(text.includes("reactor")) return "Un núcleo de energía… aunque el suyo aún es decorativo.";
-  
-  return "Interesante… continúe.";
-}
-
-/* EFECTO ESCRITURA */
-function typeText(element, text){
-  let i = 0;
-  element.innerHTML = "";
-  element.classList.add("typing");
-
-  let interval = setInterval(()=>{
-    element.innerHTML += text[i];
-    i++;
-    if(i >= text.length){
-      clearInterval(interval);
-      element.classList.remove("typing");
-    }
-  }, 25);
-}
-
-/* ENVIAR */
-function send(){
-  let text = input.value.trim();
-  if(!text) return;
-
-  inputArea.classList.add("active");
-
-  let userMsg = document.createElement("div");
-  userMsg.className = "message user";
-  userMsg.innerText = text;
-  chat.appendChild(userMsg);
-
-  input.value = "";
-
-  let botMsg = document.createElement("div");
-  botMsg.className = "message bot";
-  chat.appendChild(botMsg);
-
-  let response = getResponse(text);
-
-  setTimeout(()=>{
-    typeText(botMsg, response);
-  }, 400);
-
-  chat.scrollTop = chat.scrollHeight;
-}
-
-/* PARTÍCULAS */
+// PARTICULAS
 const canvas = document.getElementById("particles");
 const ctx = canvas.getContext("2d");
-
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 let particles = [];
-
-for(let i=0;i<80;i++){
-  particles.push({
-    x: Math.random()*canvas.width,
-    y: Math.random()*canvas.height,
-    r: Math.random()*2,
-    dx: Math.random()-0.5,
-    dy: Math.random()-0.5
-  });
+for (let i = 0; i < 60; i++) {
+    particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 2
+    });
 }
 
-function animate(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+function drawParticles() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "#00f7ff";
+    particles.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+        ctx.fill();
 
-  particles.forEach(p=>{
-    ctx.beginPath();
-    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-    ctx.fillStyle="#00f7ff";
-    ctx.fill();
+        p.y -= 0.3;
+        if (p.y < 0) p.y = canvas.height;
+    });
+    requestAnimationFrame(drawParticles);
+}
+drawParticles();
 
-    p.x += p.dx;
-    p.y += p.dy;
+// CHAT
+function send() {
+    const input = document.getElementById("input");
+    const text = input.value.trim();
+    if (!text) return;
 
-    if(p.x<0||p.x>canvas.width) p.dx*=-1;
-    if(p.y<0||p.y>canvas.height) p.dy*=-1;
-  });
+    addMsg(text, "user");
+    input.value = "";
 
-  requestAnimationFrame(animate);
+    setTimeout(() => {
+        addMsg(responder(text), "jarvis");
+    }, 500);
 }
 
-animate();
+function addMsg(text, type) {
+    const chat = document.getElementById("chat");
+    const msg = document.createElement("div");
+
+    msg.className = "msg " + type;
+    msg.innerText = text;
+
+    chat.appendChild(msg);
+    chat.scrollTop = chat.scrollHeight;
+}
+
+// RESPUESTAS INTELIGENTES (arreglado bug repetición)
+function responder(texto) {
+    texto = texto.toLowerCase();
+
+    if (texto.includes("hola")) return "Buenas, señor.";
+    if (texto.includes("que haces")) return "Operando al 100%, como siempre.";
+    if (texto.includes("clima")) return "Procesando datos climáticos...";
+    if (texto.includes("reactor")) return "El reactor Arc es una fuente de energía avanzada.";
+
+    return "Interesante... continúe.";
+}
 </script>
 
 </body>

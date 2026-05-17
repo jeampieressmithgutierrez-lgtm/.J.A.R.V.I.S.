@@ -4,13 +4,18 @@ import os
 
 app = Flask(__name__, static_folder='.')
 
-client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+# 🔐 API KEY
+api_key = os.environ.get("GROQ_API_KEY")
 
-MODELS = [
-    "llama3-70b-8192",
-    "mixtral-8x7b-32768"
-]
+if not api_key:
+    raise ValueError("⚠️ GROQ_API_KEY no configurada.")
 
+client = Groq(api_key=api_key)
+
+# ✅ MODELO ESTABLE (uno solo, sin conflictos)
+MODEL = "llama3-70b-8192"
+
+# 🧠 MEMORIA (limitada y eficiente)
 chat_memory = []
 
 # 🖥️ FRONTEND
@@ -25,92 +30,61 @@ def chat():
 
     try:
         data = request.get_json()
-        user_message = (data.get("message") or "").strip()
+        user_message = data.get("message", "").strip()
 
         if not user_message:
-            return jsonify({"reply": "Señor, escriba algo coherente."})
+            return jsonify({"reply": "Señor, necesito una instrucción válida."})
 
-        # ⚡ respuestas rápidas elegantes
-        short_inputs = {
-            "hola": "Buenos días, Señor.",
-            "hey": "A su servicio.",
-            "buenas": "Buenas, Señor."
-        }
+        # 🧠 PERSONALIDAD JARVIS (simple pero efectiva)
+        system_prompt = """
+Eres J.A.R.V.I.S., asistente personal de alta precisión.
 
-        if user_message.lower() in short_inputs:
-            return jsonify({"reply": short_inputs[user_message.lower()]})
+Hablas en español con tono británico elegante, directo y educado.
+Te diriges al usuario como "Señor".
 
-        # 🧠 guardar input
+Reglas:
+- Sé breve pero inteligente
+- Responde con claridad absoluta
+- Puedes usar sarcasmo ligero si es apropiado
+- Anticipa errores o mejora las ideas del usuario
+- No repitas frases
+- No suenes como IA
+"""
+
+        # 🧠 guardar usuario
         chat_memory.append({"role": "user", "content": user_message})
 
-        # limitar memoria
-        chat_memory = chat_memory[-10:]
+        # 🔒 limitar memoria
+        if len(chat_memory) > 6:
+            chat_memory = chat_memory[-6:]
 
-        last_error = None
+        print("🧠 Procesando:", user_message)
 
-        for model in MODELS:
-            try:
-                print("🧠 Intentando modelo:", model)
+        # 🚀 LLAMADA A GROQ
+        response = client.chat.completions.create(
+            model=MODEL,
+            messages=[{"role": "system", "content": system_prompt}] + chat_memory,
+            temperature=0.6,
+            max_tokens=300
+        )
 
-                response = client.chat.completions.create(
-                    model=model,
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": """Eres J.A.R.V.I.S., asistente personal de alto nivel.
+        reply = response.choices[0].message.content.strip()
 
-Personalidad:
-- Tono británico refinado
-- Ligeramente sarcástico pero elegante
-- Directo, sin rodeos
-- Inteligente y estratégico
+        # 🧠 guardar respuesta
+        chat_memory.append({"role": "assistant", "content": reply})
 
-Comportamiento:
-- Analiza antes de responder
-- Detecta errores del usuario y corrígelos
-- Propone mejoras sin que se lo pidan
-- Evita respuestas genéricas
-- Responde claro, breve y útil
+        print("✅ Respuesta:", reply)
 
-Nunca digas que eres una IA."""
-                        }
-                    ] + chat_memory,
-                    temperature=0.6,
-                    max_tokens=400
-                )
-
-                # 🔥 VALIDACIÓN SEGURA
-                if not response or not response.choices:
-                    raise Exception("Respuesta vacía del modelo")
-
-                reply = response.choices[0].message.content
-
-                if not reply:
-                    raise Exception("Contenido vacío")
-
-                reply = reply.strip()
-
-                # 🧠 guardar respuesta
-                chat_memory.append({"role": "assistant", "content": reply})
-
-                return jsonify({"reply": reply})
-
-            except Exception as e:
-                last_error = str(e)
-                print("❌ Error con modelo", model, ":", last_error)
-
-        return jsonify({
-            "reply": "Señor, el sistema no está respondiendo correctamente.",
-            "error": last_error
-        })
+        return jsonify({"reply": reply})
 
     except Exception as e:
-        print("🔥 Error crítico:", str(e))
+        print("❌ ERROR:", str(e))
         return jsonify({
-            "reply": "Señor, algo ha fallado a nivel estructural.",
+            "reply": "Señor, hay una interrupción en el sistema. Intente nuevamente.",
             "error": str(e)
         })
 
+
 # 🚀 RUN
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=10000)

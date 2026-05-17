@@ -6,29 +6,44 @@
 <title>JARVIS AI</title>
 
 <style>
+
+/* VARIABLES JARVIS */
+:root {
+    --azul-1: #02080f;
+    --azul-2: #061a2b;
+    --azul-3: #0d2f4f;
+    --azul-brillo: #3cc2ff;
+    --texto: #d9f3ff;
+}
+
+/* FONDO GENERAL (REACTOR SUAVE ANIMADO) */
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
-    background: radial-gradient(circle at center, #1a0d00 0%, #000000 70%);
-    color: #FFD36B;
+    font-family: 'Segoe UI', sans-serif;
+    background: radial-gradient(circle at center, #0d2f4f 0%, #02080f 70%);
+    color: var(--texto);
     overflow: hidden;
 }
 
-/* EFECTO FONDO (ENERGÍA) */
+/* EFECTO REACTOR */
 body::before {
     content: "";
     position: fixed;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle, rgba(255,180,0,0.15) 0%, transparent 60%);
-    animation: pulse 4s infinite;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(60,194,255,0.4), transparent 70%);
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: pulse 3s infinite ease-in-out;
     z-index: 0;
 }
 
 @keyframes pulse {
-    0% { opacity: 0.3; }
-    50% { opacity: 0.6; }
-    100% { opacity: 0.3; }
+    0% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+    50% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
 }
 
 /* CONTENEDOR */
@@ -40,49 +55,45 @@ body::before {
     padding: 15px;
 }
 
-/* HEADER PRO */
+/* HEADER */
 h1 {
     text-align: center;
-    letter-spacing: 3px;
-    color: #FFC857;
-    text-shadow: 
-        0 0 10px rgba(255,200,0,0.8),
-        0 0 20px rgba(255,140,0,0.6);
+    letter-spacing: 2px;
+    color: var(--azul-brillo);
+    text-shadow: 0 0 15px rgba(60,194,255,0.6);
 }
 
-/* CHAT */
+/* CHAT (SIN CAJA FEA) */
 #chat {
-    height: 70vh;
+    height: 75vh;
     overflow-y: auto;
-    padding: 15px;
-    border-radius: 15px;
-    background: rgba(0,0,0,0.4);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,180,0,0.2);
-    box-shadow: 0 0 30px rgba(255,140,0,0.15);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
 }
 
 /* MENSAJES */
 .message {
-    margin: 10px 0;
+    margin: 8px 0;
     padding: 12px;
     border-radius: 12px;
-    max-width: 80%;
+    max-width: 75%;
+    line-height: 1.4;
+    animation: fadeIn 0.3s ease;
 }
 
 /* USUARIO */
 .user {
-    background: linear-gradient(135deg, #FFD36B, #FFB300);
-    color: #000;
-    margin-left: auto;
-    box-shadow: 0 0 10px rgba(255,180,0,0.5);
+    background: linear-gradient(145deg, #0d2f4f, #123a6b);
+    align-self: flex-end;
+    box-shadow: 0 0 10px rgba(60,194,255,0.3);
 }
 
 /* JARVIS */
 .bot {
-    background: rgba(255,180,0,0.08);
-    border-left: 3px solid #FFC857;
-    box-shadow: 0 0 10px rgba(255,140,0,0.2);
+    background: rgba(60,194,255,0.08);
+    border-left: 3px solid var(--azul-brillo);
+    align-self: flex-start;
 }
 
 /* INPUT */
@@ -95,45 +106,73 @@ h1 {
 input {
     flex: 1;
     padding: 12px;
-    border-radius: 10px;
-    border: none;
+    border-radius: 8px;
+    border: 1px solid #0d2f4f;
     outline: none;
     font-size: 16px;
-    background: rgba(0,0,0,0.6);
-    color: #FFD36B;
-    box-shadow: inset 0 0 10px rgba(255,180,0,0.2);
+    background: #061a2b;
+    color: var(--texto);
 }
 
 /* BOTÓN */
 button {
     padding: 12px 18px;
-    background: linear-gradient(135deg, #FFD36B, #FFB300);
-    border: none;
-    border-radius: 10px;
+    background: linear-gradient(145deg, #123a6b, #0d2f4f);
+    border: 1px solid var(--azul-brillo);
+    border-radius: 8px;
     cursor: pointer;
+    color: white;
     font-weight: bold;
-    box-shadow: 0 0 15px rgba(255,180,0,0.5);
-    transition: 0.3s;
 }
 
+/* HOVER */
 button:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 25px rgba(255,180,0,0.9);
+    box-shadow: 0 0 12px var(--azul-brillo);
 }
 
-/* 📱 CELULAR */
+/* ANIMACIÓN MENSAJES */
+@keyframes fadeIn {
+    from {opacity: 0; transform: translateY(10px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+
+/* 📱 MÓVIL */
 @media (max-width: 600px) {
+
+    .container {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 18px;
+    }
+
     #chat {
-        height: 75vh;
+        height: 78vh;
+    }
+
+    .message {
+        max-width: 90%;
+        font-size: 15px;
+    }
+
+    input {
+        font-size: 15px;
+        padding: 10px;
+    }
+
+    button {
+        padding: 10px;
     }
 }
+
 </style>
 </head>
 
 <body>
 
 <div class="container">
-    <h1>JARVIS AI</h1>
+    <h1>J.A.R.V.I.S</h1>
 
     <div id="chat"></div>
 
@@ -151,8 +190,18 @@ async function sendMessage() {
     const message = input.value.trim();
     if (!message) return;
 
+    // Usuario
     chat.innerHTML += `<div class="message user">${message}</div>`;
     input.value = "";
+
+    chat.scrollTop = chat.scrollHeight;
+
+    // Indicador escribiendo
+    const typing = document.createElement("div");
+    typing.className = "message bot";
+    typing.id = "typing";
+    typing.innerText = "Procesando...";
+    chat.appendChild(typing);
     chat.scrollTop = chat.scrollHeight;
 
     const response = await fetch("/chat", {
@@ -163,6 +212,10 @@ async function sendMessage() {
 
     const data = await response.json();
 
+    // Quitar "Procesando"
+    typing.remove();
+
+    // JARVIS responde
     chat.innerHTML += `<div class="message bot">${data.reply}</div>`;
     chat.scrollTop = chat.scrollHeight;
 }

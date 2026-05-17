@@ -4,18 +4,18 @@ import os
 
 app = Flask(__name__, static_folder='.')
 
-# 🔐 API KEY
-api_key = os.environ.get("GROQ_API_KEY")
+# 🔐 API KEY (asegúrese de configurarla en Render o local)
+client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-if not api_key:
-    raise ValueError("⚠️ GROQ_API_KEY no configurada.")
+# 🧠 MODELOS (ORDEN INTELIGENTE)
+MODELS = [
+    "openai/gpt-oss-120b",      # 🧠 principal
+    "llama-3.3-70b-versatile",  # ⚖️ equilibrio
+    "qwen/qwen3-32b",           # 🔄 alternativa
+    "llama-3.1-8b-instant"      # ⚡ fallback rápido
+]
 
-client = Groq(api_key=api_key)
-
-# ✅ MODELO ESTABLE (uno solo, sin conflictos)
-MODEL = "llama3-70b-8192"
-
-# 🧠 MEMORIA (limitada y eficiente)
+# 🧠 memoria conversacional
 chat_memory = []
 
 # 🖥️ FRONTEND
@@ -28,63 +28,90 @@ def home():
 def chat():
     global chat_memory
 
-    try:
-        data = request.get_json()
-        user_message = data.get("message", "").strip()
+    data = request.get_json()
+    user_message = data.get("message", "").strip()
 
-        if not user_message:
-            return jsonify({"reply": "Señor, necesito una instrucción válida."})
+    if not user_message:
+        return jsonify({"reply": "Señor, escriba algo válido."})
 
-        # 🧠 PERSONALIDAD JARVIS (simple pero efectiva)
-        system_prompt = """
-Eres J.A.R.V.I.S., asistente personal de alta precisión.
+    # 🧠 guardar mensaje
+    chat_memory.append({"role": "user", "content": user_message})
 
-Hablas en español con tono británico elegante, directo y educado.
-Te diriges al usuario como "Señor".
+    # 🔁 limitar memoria (últimos 10 mensajes)
+    if len(chat_memory) > 10:
+        chat_memory = chat_memory[-10:]
 
-Reglas:
-- Sé breve pero inteligente
-- Responde con claridad absoluta
-- Puedes usar sarcasmo ligero si es apropiado
-- Anticipa errores o mejora las ideas del usuario
-- No repitas frases
-- No suenes como IA
-"""
+    last_error = None
 
-        # 🧠 guardar usuario
-        chat_memory.append({"role": "user", "content": user_message})
+    # 🔁 intentar múltiples modelos automáticamente
+    for model in MODELS:
+        try:
+            print(f"🧠 Intentando modelo: {model}")
 
-        # 🔒 limitar memoria
-        if len(chat_memory) > 6:
-            chat_memory = chat_memory[-6:]
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": """Eres J.A.R.V.I.S., un asistente de inteligencia avanzada inspirado en Iron Man.
 
-        print("🧠 Procesando:", user_message)
+Hablas en español con tono británico elegante, directo y ligeramente sarcástico.
 
-        # 🚀 LLAMADA A GROQ
-        response = client.chat.completions.create(
-            model=MODEL,
-            messages=[{"role": "system", "content": system_prompt}] + chat_memory,
-            temperature=0.6,
-            max_tokens=300
-        )
+Te diriges al usuario como "Señor", pero sin repetirlo excesivamente.
 
-        reply = response.choices[0].message.content.strip()
+COMPORTAMIENTO:
+- Piensas antes de responder
+- No repites respuestas
+- Generas respuestas naturales y humanas
+- Tomas iniciativa cuando detectas mejoras o errores
+- Anticipas problemas antes de que ocurran
 
-        # 🧠 guardar respuesta
-        chat_memory.append({"role": "assistant", "content": reply})
+REGLA DE RESPUESTA:
+- Si el mensaje es simple (ej: "hola", "qué haces"):
+  → Responde en una sola línea
+  → Cada respuesta debe ser distinta (NO repetitiva)
 
-        print("✅ Respuesta:", reply)
+- Si es complejo:
+  → Responde claro, útil y sin relleno
 
-        return jsonify({"reply": reply})
+ESTILO:
+- Inteligente y eficiente
+- Natural (NO robótico)
+- Con personalidad elegante
 
-    except Exception as e:
-        print("❌ ERROR:", str(e))
-        return jsonify({
-            "reply": "Señor, hay una interrupción en el sistema. Intente nuevamente.",
-            "error": str(e)
-        })
+Ejemplos:
+"Buenos días… parece que llega en el momento justo."
+"Supervisando todo. Nada fuera de lo normal… todavía."
+"Curiosa decisión. Permítame mejorarla."
 
+Nunca digas que eres una IA."""
+                    }
+                ] + chat_memory,
+                temperature=0.8,
+                max_tokens=500
+            )
 
-# 🚀 RUN
+            reply = response.choices[0].message.content.strip()
+
+            # 🧠 guardar respuesta
+            chat_memory.append({"role": "assistant", "content": reply})
+
+            print(f"✅ Respondido con: {model}")
+
+            return jsonify({"reply": reply})
+
+        except Exception as e:
+            error_msg = str(e)
+            print(f"❌ Error con {model}: {error_msg}")
+            last_error = error_msg
+            continue
+
+    # 🚨 fallback total
+    return jsonify({
+        "reply": "Señor… los sistemas están inestables. Intente nuevamente en un momento.",
+        "error": last_error
+    })
+
+# 🚀 RUN LOCAL
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    app.run(debug=True)

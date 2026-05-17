@@ -7,8 +7,8 @@ app = Flask(__name__, static_folder='.')
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 MODELS = [
-    "llama-3.1-70b-versatile",
-    "llama-3.1-8b-instant"
+    "llama3-70b-8192",
+    "mixtral-8x7b-32768"
 ]
 
 chat_memory = []

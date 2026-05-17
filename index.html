@@ -17,7 +17,7 @@ body {
   overflow: hidden;
 }
 
-/* 🌐 FONDO TECNOLÓGICO */
+/* 🌐 FONDO */
 .bg {
   position: fixed;
   top: 0;
@@ -26,31 +26,9 @@ body {
   height: 100%;
   z-index: -1;
   background: radial-gradient(circle at center, #001a2a, #000 70%);
-  overflow: hidden;
 }
 
-/* 🔵 CIRCUITOS */
-.bg::before {
-  content: "";
-  position: absolute;
-  width: 200%;
-  height: 200%;
-  background-image: 
-    radial-gradient(circle at 20% 30%, rgba(0,255,255,0.08) 1px, transparent 1px),
-    radial-gradient(circle at 70% 60%, rgba(0,255,255,0.06) 1px, transparent 1px),
-    linear-gradient(rgba(0,255,255,0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,255,255,0.05) 1px, transparent 1px);
-  background-size: 80px 80px;
-  animation: moveGrid 20s linear infinite;
-  opacity: 0.4;
-}
-
-@keyframes moveGrid {
-  0% { transform: translate(0,0); }
-  100% { transform: translate(-80px,-80px); }
-}
-
-/* 🔵 REACTOR ARC */
+/* 🔵 REACTOR CENTRAL */
 .reactor {
   position: absolute;
   top: 50%;
@@ -60,7 +38,6 @@ body {
   transform: translate(-50%, -50%);
   border-radius: 50%;
   border: 2px solid rgba(0,255,255,0.3);
-  box-shadow: 0 0 40px rgba(0,255,255,0.2);
   animation: pulse 2s infinite;
 }
 
@@ -84,9 +61,25 @@ body {
 }
 
 @keyframes corePulse {
-  0% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
-  50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-  100% { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+  0% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.2); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+/* 🧠 HEADER J.A.R.V.I.S */
+.header {
+  text-align: center;
+  padding: 15px;
+  font-size: 20px;
+  letter-spacing: 6px;
+  font-weight: bold;
+
+  /* efecto metálico */
+  background: linear-gradient(90deg, #8aa0b3, #00bcd4, #8aa0b3);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  text-shadow: 0 0 10px rgba(0,255,255,0.3);
 }
 
 /* 💬 CHAT */
@@ -100,24 +93,44 @@ body {
 }
 
 .mensaje {
-  max-width: 70%;
+  max-width: 75%;
   padding: 10px;
   margin: 8px;
   border-radius: 15px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
 }
 
+/* usuario */
 .usuario {
   background: #00ffff;
   color: black;
   align-self: flex-end;
 }
 
+/* IA estilo perfil */
 .ia {
   border: 1px solid #00ffff;
   align-self: flex-start;
 }
 
-/* ⌨️ INPUT */
+/* 🔺 icono reactor IA */
+.icono {
+  width: 12px;
+  height: 12px;
+  background: #00ffff;
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  margin-top: 4px;
+  box-shadow: 0 0 8px #00ffff;
+}
+
+/* texto */
+.texto {
+  flex: 1;
+}
+
+/* INPUT */
 .input-container {
   display: flex;
   padding: 10px;
@@ -146,9 +159,11 @@ button {
 
 <body>
 
-<!-- 🌐 FONDO -->
 <div class="bg"></div>
 <div class="reactor"></div>
+
+<!-- 🧠 TITULO -->
+<div class="header">J.A.R.V.I.S.</div>
 
 <div class="chat-container" id="chat"></div>
 
@@ -161,43 +176,58 @@ button {
 const chat = document.getElementById("chat");
 const input = document.getElementById("input");
 
-function escribirTexto(elemento, texto, velocidad = 15) {
-  let i = 0;
-  const interval = setInterval(() => {
-    elemento.textContent += texto.charAt(i);
+function escribirTexto(el, texto, speed=15){
+  let i=0;
+  const t=setInterval(()=>{
+    el.textContent += texto[i];
     i++;
     chat.scrollTop = chat.scrollHeight;
-    if (i >= texto.length) clearInterval(interval);
-  }, velocidad);
+    if(i>=texto.length) clearInterval(t);
+  },speed);
 }
 
 function agregarMensaje(texto, tipo, animado=false){
-  const div = document.createElement("div");
-  div.classList.add("mensaje", tipo);
 
-  if(animado && tipo==="ia"){
-    div.textContent="";
-    chat.appendChild(div);
-    escribirTexto(div, texto);
+  const cont = document.createElement("div");
+  cont.classList.add("mensaje", tipo);
+
+  if(tipo === "ia"){
+    const icono = document.createElement("div");
+    icono.classList.add("icono");
+
+    const textoDiv = document.createElement("div");
+    textoDiv.classList.add("texto");
+
+    cont.appendChild(icono);
+    cont.appendChild(textoDiv);
+
+    chat.appendChild(cont);
+
+    if(animado){
+      escribirTexto(textoDiv, texto);
+    } else {
+      textoDiv.textContent = texto;
+    }
+
   } else {
-    div.textContent = texto;
-    chat.appendChild(div);
+    cont.textContent = texto;
+    chat.appendChild(cont);
   }
 
   chat.scrollTop = chat.scrollHeight;
 }
 
 async function enviar(){
-  const mensaje = input.value.trim();
-  if(!mensaje) return;
+  const msg = input.value.trim();
+  if(!msg) return;
 
-  agregarMensaje(mensaje, "usuario");
+  agregarMensaje(msg, "usuario");
   input.value="";
 
   const res = await fetch("/chat", {
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({message: mensaje})
+    body: JSON.stringify({message: msg})
   });
 
   const data = await res.json();

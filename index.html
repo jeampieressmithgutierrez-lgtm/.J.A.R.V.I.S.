@@ -9,12 +9,12 @@
 body {
   margin: 0;
   font-family: 'Segoe UI', sans-serif;
-  background: #020b12;
+  background: radial-gradient(circle at center, #02131c, #000);
   overflow: hidden;
-  color: #00f0ff;
+  color: #00f7ff;
 }
 
-/* FONDO PARTÍCULAS */
+/* PARTÍCULAS */
 canvas {
   position: fixed;
   top: 0;
@@ -22,78 +22,104 @@ canvas {
   z-index: 0;
 }
 
-/* REACTOR CENTRAL */
+/* TITULO */
+.header {
+  position: fixed;
+  top: 20px;
+  width: 100%;
+  text-align: center;
+  font-size: 28px;
+  letter-spacing: 4px;
+  color: #00f7ff;
+  text-shadow: 0 0 15px #00f7ff;
+  z-index: 2;
+}
+
+/* REACTOR */
 .reactor {
   position: absolute;
-  top: 50%;
+  top: 45%;
   left: 50%;
-  width: 200px;
-  height: 200px;
   transform: translate(-50%, -50%);
+  width: 180px;
+  height: 180px;
   border-radius: 50%;
-  background: radial-gradient(circle, #00f0ff 0%, #001a22 60%, transparent 70%);
-  box-shadow: 0 0 40px #00f0ff, inset 0 0 30px #00f0ff;
+  background: radial-gradient(circle, #00f7ff, #003a44);
+  box-shadow: 0 0 60px #00f7ff, inset 0 0 40px #00f7ff;
   animation: pulse 2s infinite ease-in-out;
   z-index: 1;
 }
 
 @keyframes pulse {
-  0%,100% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
-  50% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+  0%,100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.1); }
 }
 
 /* CHAT */
 .chat {
-  position: absolute;
-  bottom: 80px;
+  position: fixed;
+  bottom: 100px;
   width: 100%;
+  max-height: 60%;
+  overflow-y: auto;
   padding: 10px;
   z-index: 2;
 }
 
-.bubble {
+.message {
   max-width: 70%;
-  padding: 10px;
-  margin: 5px;
-  border-radius: 15px;
+  padding: 10px 15px;
+  margin: 10px;
+  border-radius: 20px;
+  animation: fadeIn 0.3s ease;
 }
 
 .user {
-  background: #00f0ff;
-  color: #000;
+  background: #00f7ff;
+  color: black;
   margin-left: auto;
 }
 
 .bot {
-  border: 1px solid #00f0ff;
+  border: 1px solid #00f7ff;
+}
+
+@keyframes fadeIn {
+  from {opacity:0; transform: translateY(10px);}
+  to {opacity:1;}
 }
 
 /* INPUT */
 .input-area {
   position: fixed;
-  bottom: 0;
-  width: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 50%;
   display: flex;
-  padding: 10px;
-  background: rgba(0,20,30,0.8);
-  backdrop-filter: blur(10px);
-  z-index: 3;
+  gap: 10px;
+  z-index: 2;
+  transition: 0.4s;
+}
+
+.input-area.active {
+  bottom: 20px;
 }
 
 input {
-  flex: 1;
   padding: 12px;
   border-radius: 20px;
   border: none;
+  width: 220px;
   outline: none;
 }
 
 button {
-  margin-left: 10px;
-  padding: 12px 18px;
+  background: #00f7ff;
   border: none;
-  border-radius: 20px;
-  background: #00f0ff;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  cursor: pointer;
 }
 
 /* EFECTO ESCRITURA */
@@ -103,9 +129,9 @@ button {
 }
 
 @keyframes blink {
-  0%,50%,100% { opacity: 1; }
-  25%,75% { opacity: 0; }
+  50% {opacity: 0;}
 }
+
 </style>
 </head>
 
@@ -113,52 +139,73 @@ button {
 
 <canvas id="particles"></canvas>
 
+<div class="header">J.A.R.V.I.S.</div>
 <div class="reactor"></div>
 
 <div class="chat" id="chat"></div>
 
-<div class="input-area">
+<div class="input-area" id="inputArea">
   <input id="input" placeholder="Hable, señor...">
   <button onclick="send()">➤</button>
 </div>
 
 <script>
 const chat = document.getElementById("chat");
+const input = document.getElementById("input");
+const inputArea = document.getElementById("inputArea");
 
-function send() {
-  const input = document.getElementById("input");
-  const text = input.value;
-  if (!text) return;
+/* RESPUESTAS INTELIGENTES */
+function getResponse(text){
+  text = text.toLowerCase();
 
-  addMessage(text, "user");
+  if(text.includes("hola")) return "Saludos, señor.";
+  if(text.includes("que haces")) return "Observando y optimizando, como siempre.";
+  if(text.includes("reactor")) return "Un núcleo de energía… aunque el suyo aún es decorativo.";
+  
+  return "Interesante… continúe.";
+}
+
+/* EFECTO ESCRITURA */
+function typeText(element, text){
+  let i = 0;
+  element.innerHTML = "";
+  element.classList.add("typing");
+
+  let interval = setInterval(()=>{
+    element.innerHTML += text[i];
+    i++;
+    if(i >= text.length){
+      clearInterval(interval);
+      element.classList.remove("typing");
+    }
+  }, 25);
+}
+
+/* ENVIAR */
+function send(){
+  let text = input.value.trim();
+  if(!text) return;
+
+  inputArea.classList.add("active");
+
+  let userMsg = document.createElement("div");
+  userMsg.className = "message user";
+  userMsg.innerText = text;
+  chat.appendChild(userMsg);
+
   input.value = "";
 
-  setTimeout(() => {
-    typeMessage("Saludos, señor.", "bot");
-  }, 500);
-}
+  let botMsg = document.createElement("div");
+  botMsg.className = "message bot";
+  chat.appendChild(botMsg);
 
-function addMessage(text, type) {
-  const div = document.createElement("div");
-  div.className = "bubble " + type;
-  div.textContent = text;
-  chat.appendChild(div);
-}
+  let response = getResponse(text);
 
-function typeMessage(text, type) {
-  const div = document.createElement("div");
-  div.className = "bubble " + type + " typing";
-  chat.appendChild(div);
+  setTimeout(()=>{
+    typeText(botMsg, response);
+  }, 400);
 
-  let i = 0;
-  const interval = setInterval(() => {
-    div.textContent = text.substring(0, i);
-    i++;
-    if (i > text.length) {
-      clearInterval(interval);
-      div.classList.remove("typing");
-    }
-  }, 30);
+  chat.scrollTop = chat.scrollHeight;
 }
 
 /* PARTÍCULAS */
@@ -170,30 +217,30 @@ canvas.height = window.innerHeight;
 
 let particles = [];
 
-for (let i = 0; i < 80; i++) {
+for(let i=0;i<80;i++){
   particles.push({
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    r: Math.random() * 2,
-    dx: (Math.random() - 0.5),
-    dy: (Math.random() - 0.5)
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height,
+    r: Math.random()*2,
+    dx: Math.random()-0.5,
+    dy: Math.random()-0.5
   });
 }
 
-function animate() {
+function animate(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  particles.forEach(p => {
+  particles.forEach(p=>{
     ctx.beginPath();
-    ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
-    ctx.fillStyle = "#00f0ff";
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle="#00f7ff";
     ctx.fill();
 
     p.x += p.dx;
     p.y += p.dy;
 
-    if(p.x<0||p.x>canvas.width) p.dx *= -1;
-    if(p.y<0||p.y>canvas.height) p.dy *= -1;
+    if(p.x<0||p.x>canvas.width) p.dx*=-1;
+    if(p.y<0||p.y>canvas.height) p.dy*=-1;
   });
 
   requestAnimationFrame(animate);

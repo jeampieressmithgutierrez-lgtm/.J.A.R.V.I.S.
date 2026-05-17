@@ -8,28 +8,46 @@
 <style>
 body {
     margin: 0;
-    font-family: 'Segoe UI', sans-serif;
-    background: radial-gradient(circle at top, #1a1200, #000000 80%);
-    color: #FFD700;
+    font-family: Arial, sans-serif;
+    background: radial-gradient(circle at center, #1a0d00 0%, #000000 70%);
+    color: #FFD36B;
+    overflow: hidden;
 }
 
-/* HEADER */
-.header {
-    text-align: center;
-    font-size: 26px;
-    padding: 15px;
-    letter-spacing: 3px;
-    font-weight: bold;
-    background: linear-gradient(to right, transparent, rgba(255,215,0,0.1), transparent);
-    border-bottom: 1px solid rgba(255,215,0,0.2);
-    text-shadow: 0 0 10px rgba(255,215,0,0.5);
+/* EFECTO FONDO (ENERGÍA) */
+body::before {
+    content: "";
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(255,180,0,0.15) 0%, transparent 60%);
+    animation: pulse 4s infinite;
+    z-index: 0;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.3; }
+    50% { opacity: 0.6; }
+    100% { opacity: 0.3; }
 }
 
 /* CONTENEDOR */
 .container {
+    position: relative;
+    z-index: 1;
     max-width: 900px;
     margin: auto;
     padding: 15px;
+}
+
+/* HEADER PRO */
+h1 {
+    text-align: center;
+    letter-spacing: 3px;
+    color: #FFC857;
+    text-shadow: 
+        0 0 10px rgba(255,200,0,0.8),
+        0 0 20px rgba(255,140,0,0.6);
 }
 
 /* CHAT */
@@ -38,42 +56,39 @@ body {
     overflow-y: auto;
     padding: 15px;
     border-radius: 15px;
-    background: rgba(255, 215, 0, 0.05);
+    background: rgba(0,0,0,0.4);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,215,0,0.2);
-    box-shadow: 0 0 25px rgba(255,215,0,0.1);
+    border: 1px solid rgba(255,180,0,0.2);
+    box-shadow: 0 0 30px rgba(255,140,0,0.15);
 }
 
 /* MENSAJES */
 .message {
     margin: 10px 0;
-    padding: 12px 15px;
-    border-radius: 15px;
+    padding: 12px;
+    border-radius: 12px;
     max-width: 80%;
-    line-height: 1.5;
-    animation: fadeIn 0.3s ease-in-out;
 }
 
 /* USUARIO */
 .user {
-    background: linear-gradient(135deg, #FFD700, #ffcc00);
+    background: linear-gradient(135deg, #FFD36B, #FFB300);
     color: #000;
     margin-left: auto;
-    text-align: right;
-    box-shadow: 0 0 10px rgba(255,215,0,0.4);
+    box-shadow: 0 0 10px rgba(255,180,0,0.5);
 }
 
 /* JARVIS */
 .bot {
-    background: rgba(255, 215, 0, 0.08);
-    border-left: 3px solid #FFD700;
-    backdrop-filter: blur(6px);
+    background: rgba(255,180,0,0.08);
+    border-left: 3px solid #FFC857;
+    box-shadow: 0 0 10px rgba(255,140,0,0.2);
 }
 
 /* INPUT */
 .input-area {
     display: flex;
-    margin-top: 12px;
+    margin-top: 10px;
     gap: 10px;
 }
 
@@ -81,47 +96,35 @@ input {
     flex: 1;
     padding: 12px;
     border-radius: 10px;
-    border: 1px solid rgba(255,215,0,0.2);
+    border: none;
     outline: none;
     font-size: 16px;
     background: rgba(0,0,0,0.6);
-    color: #FFD700;
+    color: #FFD36B;
+    box-shadow: inset 0 0 10px rgba(255,180,0,0.2);
 }
 
 /* BOTÓN */
 button {
     padding: 12px 18px;
-    background: linear-gradient(135deg, #FFD700, #ffcc00);
+    background: linear-gradient(135deg, #FFD36B, #FFB300);
     border: none;
     border-radius: 10px;
     cursor: pointer;
     font-weight: bold;
-    box-shadow: 0 0 10px rgba(255,215,0,0.5);
+    box-shadow: 0 0 15px rgba(255,180,0,0.5);
+    transition: 0.3s;
 }
 
 button:hover {
     transform: scale(1.05);
-}
-
-/* ANIMACIÓN */
-@keyframes fadeIn {
-    from {opacity: 0; transform: translateY(5px);}
-    to {opacity: 1; transform: translateY(0);}
+    box-shadow: 0 0 25px rgba(255,180,0,0.9);
 }
 
 /* 📱 CELULAR */
 @media (max-width: 600px) {
-    .header {
-        font-size: 20px;
-    }
-
     #chat {
         height: 75vh;
-    }
-
-    .message {
-        max-width: 90%;
-        font-size: 14px;
     }
 }
 </style>
@@ -129,9 +132,8 @@ button:hover {
 
 <body>
 
-<div class="header">JARVIS AI</div>
-
 <div class="container">
+    <h1>JARVIS AI</h1>
 
     <div id="chat"></div>
 
@@ -139,7 +141,6 @@ button:hover {
         <input id="input" placeholder="Hable, señor...">
         <button onclick="sendMessage()">Enviar</button>
     </div>
-
 </div>
 
 <script>
@@ -150,16 +151,8 @@ async function sendMessage() {
     const message = input.value.trim();
     if (!message) return;
 
-    // Mensaje usuario
     chat.innerHTML += `<div class="message user">${message}</div>`;
     input.value = "";
-    chat.scrollTop = chat.scrollHeight;
-
-    // Simulación escribiendo
-    const typing = document.createElement("div");
-    typing.className = "message bot";
-    typing.innerText = "Escribiendo...";
-    chat.appendChild(typing);
     chat.scrollTop = chat.scrollHeight;
 
     const response = await fetch("/chat", {
@@ -170,10 +163,6 @@ async function sendMessage() {
 
     const data = await response.json();
 
-    // Quitar "Escribiendo..."
-    chat.removeChild(typing);
-
-    // Mensaje bot
     chat.innerHTML += `<div class="message bot">${data.reply}</div>`;
     chat.scrollTop = chat.scrollHeight;
 }

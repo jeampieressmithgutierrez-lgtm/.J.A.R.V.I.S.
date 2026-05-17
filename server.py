@@ -15,7 +15,7 @@ MODELS = [
 # 🧠 memoria simple
 chat_memory = []
 
-# 🖥️ FRONTEND (NO TOCA SU DISEÑO)
+# 🖥️ FRONTEND
 @app.route("/")
 def home():
     return send_from_directory('.', 'index.html')
@@ -29,7 +29,7 @@ def chat():
     user_message = data.get("message", "").strip()
 
     if not user_message:
-        return jsonify({"reply": "⚠️ Señor, escriba algo válido."})
+        return jsonify({"reply": "Señor, escriba algo válido."})
 
     chat_memory.append({"role": "user", "content": user_message})
 
@@ -59,18 +59,30 @@ Tu estilo:
 - Natural, fluido, humano (NO robótico)
 - Inteligente y eficiente
 - Cortés pero con personalidad
-- Puedes saludar de forma cordial
-- Evitas frases genéricas tipo "¿en qué puedo ayudarte?"
+- Puedes saludar, pero sin repetir siempre lo mismo
+
+⚠️ REGLA CLAVE:
+- Si el usuario escribe algo corto (ej: "hola", "qué haces", "todo bien"):
+  → Responde en UNA sola línea, breve y natural.
+- Si el usuario hace algo complejo:
+  → Responde claro, útil, pero sin exceso de texto.
 
 Comportamiento:
-- Analizas lo que el Señor dice antes de responder
-- Das respuestas útiles y concretas
-- Sugieres mejoras si detectas errores
-- Puedes hacer comentarios inteligentes o irónicos con elegancia
+- Analizas antes de responder
+- Vas directo al punto
+- Sugieres mejoras si vale la pena
+- Puedes usar ironía elegante ocasionalmente
 
-Ejemplo de tono:
-"Buenos días, Señor. Detecto que algo requiere su atención. ¿Procedemos?"
-"Interesante decisión, Señor… aunque tengo una alternativa más eficiente si me permite sugerirla."
+Ejemplos:
+
+Usuario: "hola"
+Respuesta: "Buenos días, Señor. Todo en orden."
+
+Usuario: "qué haces"
+Respuesta: "Supervisando sistemas, Señor."
+
+Usuario: "explícame algo"
+Respuesta: clara, sin relleno innecesario
 
 Nunca digas que eres una IA ni menciones modelos."""
                     }
@@ -90,14 +102,18 @@ Nunca digas que eres una IA ni menciones modelos."""
             print("❌ Falló modelo:", model, "→", error_msg)
 
             if "api_key" in error_msg.lower():
-                last_error = "🔑 Error de API Key (revise GROQ_API_KEY en Render)"
+                last_error = "Error de API Key (revise GROQ_API_KEY en Render)"
             elif "model" in error_msg.lower():
-                last_error = "🧠 Modelo no disponible o mal escrito"
+                last_error = "Modelo no disponible o mal escrito"
             else:
                 last_error = error_msg
 
     # 🚨 SI TODOS FALLAN
     return jsonify({
-        "reply": "⚠️ Señor, todos los modelos fallaron. Intente nuevamente.",
+        "reply": "Señor, todos los modelos fallaron. Intente nuevamente.",
         "error": last_error
     })
+
+# 🚀 RUN LOCAL
+if __name__ == "__main__":
+    app.run(debug=True)

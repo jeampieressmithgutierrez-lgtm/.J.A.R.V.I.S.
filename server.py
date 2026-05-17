@@ -4,7 +4,7 @@ import os
 
 app = Flask(__name__, static_folder='.')
 
-client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+client = Groq(api_key=os.environ.get("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"))
 
 # 🧠 MODELOS ACTUALES (ESTABLES)
 MODELS = [

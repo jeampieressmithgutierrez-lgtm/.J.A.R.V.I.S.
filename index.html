@@ -106,58 +106,79 @@ button {
   z-index: -1;
 }
 
-/* REACTOR ARC */
+/* ========================= */
+/* REACTOR ARC MEJORADO */
+/* ========================= */
+
 .reactor {
   position: absolute;
   bottom: 120px;
   left: 50%;
   transform: translateX(-50%);
-  width: 200px;
-  height: 200px;
+  width: 220px;
+  height: 220px;
 }
 
-/* NÚCLEO */
+/* NÚCLEO INTENSO */
 .reactor::before {
   content: "";
   position: absolute;
-  width: 80px;
-  height: 80px;
+  width: 90px;
+  height: 90px;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: radial-gradient(circle, #00eaff, #0088ff, transparent);
+  background: radial-gradient(circle, #ffffff, #00eaff, #0088ff, transparent);
   border-radius: 50%;
-  box-shadow: 0 0 30px #00eaff, 0 0 60px #0088ff;
-  animation: pulseCore 1.8s infinite ease-in-out;
+  box-shadow:
+    0 0 25px #00eaff,
+    0 0 60px #0088ff,
+    0 0 100px #00eaff;
+  animation: pulseCore 1.6s infinite ease-in-out;
 }
 
 /* ANILLO EXTERNO */
 .reactor::after {
   content: "";
   position: absolute;
-  width: 180px;
-  height: 180px;
-  border: 2px solid rgba(0,234,255,0.4);
+  width: 200px;
+  height: 200px;
   border-radius: 50%;
   top: 10px;
   left: 10px;
-  box-shadow: 0 0 20px #00eaff inset;
-  animation: rotate 6s linear infinite;
+  border: 2px solid rgba(0,234,255,0.3);
+  box-shadow:
+    0 0 15px #00eaff inset,
+    0 0 30px #00eaff;
+  animation: rotate 8s linear infinite;
 }
 
 /* ANILLO INTERNO */
 .ring {
   position: absolute;
-  width: 140px;
-  height: 140px;
-  top: 30px;
-  left: 30px;
-  border: 1px dashed rgba(0,234,255,0.6);
+  width: 150px;
+  height: 150px;
+  top: 35px;
+  left: 35px;
   border-radius: 50%;
-  animation: rotateReverse 4s linear infinite;
+  border: 2px dashed rgba(0,234,255,0.7);
+  animation: rotateReverse 5s linear infinite;
 }
 
-/* LÍNEAS */
+/* SEGUNDO ANILLO (NUEVO) */
+.ring2 {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  top: 50px;
+  left: 50px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,234,255,0.5);
+  box-shadow: 0 0 10px #00eaff;
+  animation: rotate 3s linear infinite;
+}
+
+/* LÍNEAS ENERGÍA */
 .lines {
   position: absolute;
   width: 100%;
@@ -166,12 +187,13 @@ button {
 
 .lines span {
   position: absolute;
-  width: 2px;
-  height: 20px;
+  width: 3px;
+  height: 25px;
   background: #00eaff;
   top: 0;
   left: 50%;
   transform-origin: bottom center;
+  box-shadow: 0 0 10px #00eaff;
 }
 
 .lines span:nth-child(1){transform:rotate(0deg) translateX(-50%)}
@@ -186,7 +208,7 @@ button {
 /* ANIMACIONES */
 @keyframes pulseCore {
   0%,100% { transform: translate(-50%, -50%) scale(1); }
-  50% { transform: translate(-50%, -50%) scale(1.2); }
+  50% { transform: translate(-50%, -50%) scale(1.3); }
 }
 
 @keyframes rotate {
@@ -229,6 +251,7 @@ button {
 <!-- REACTOR -->
 <div class="reactor">
   <div class="ring"></div>
+  <div class="ring2"></div>
   <div class="lines">
     <span></span><span></span><span></span><span></span>
     <span></span><span></span><span></span><span></span>

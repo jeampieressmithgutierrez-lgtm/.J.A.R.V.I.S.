@@ -14,7 +14,7 @@ body {
   overflow: hidden;
 }
 
-/* CONTENEDOR GENERAL */
+/* CONTENEDOR */
 .container {
   width: 900px;
   height: 90vh;
@@ -54,6 +54,7 @@ body {
   margin: 10px;
   border-radius: 10px;
   position: relative;
+  white-space: pre-wrap;
 }
 
 /* USUARIO */
@@ -115,7 +116,7 @@ button {
   100% { transform: translateX(-50%) scale(1); }
 }
 
-/* FONDO RED */
+/* GRID */
 .background-grid {
   position: absolute;
   width: 100%;
@@ -123,6 +124,17 @@ button {
   background-image: radial-gradient(#00eaff22 1px, transparent 1px);
   background-size: 40px 40px;
   z-index: -1;
+}
+
+/* EFECTO ESCRIBIENDO */
+.typing::after {
+  content: "▋";
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%,100% { opacity: 0; }
+  50% { opacity: 1; }
 }
 </style>
 </head>
@@ -132,16 +144,13 @@ button {
 <div class="background-grid"></div>
 
 <div class="container">
-
   <div class="header">J.A.R.V.I.S</div>
-
   <div class="chat" id="chat"></div>
 
   <div class="input-area">
     <input id="input" placeholder="Hable, señor...">
     <button onclick="enviar()">➤</button>
   </div>
-
 </div>
 
 <div class="reactor"></div>
@@ -150,20 +159,49 @@ button {
 const chat = document.getElementById("chat");
 const input = document.getElementById("input");
 
+let enviando = false;
+
 function agregarMensaje(texto, tipo) {
   const div = document.createElement("div");
   div.classList.add("mensaje", tipo);
   div.innerText = texto;
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
+  return div;
+}
+
+// ✨ EFECTO ESCRITURA REAL
+function escribirTexto(elemento, texto, velocidad = 20) {
+  elemento.innerText = "";
+  elemento.classList.add("typing");
+
+  let i = 0;
+  function escribir() {
+    if (i < texto.length) {
+      elemento.innerText += texto.charAt(i);
+      i++;
+      setTimeout(escribir, velocidad);
+    } else {
+      elemento.classList.remove("typing");
+    }
+  }
+  escribir();
 }
 
 async function enviar() {
+  if (enviando) return;
+  enviando = true;
+
   const mensaje = input.value.trim();
-  if (!mensaje) return;
+  if (!mensaje) {
+    enviando = false;
+    return;
+  }
 
   agregarMensaje(mensaje, "usuario");
   input.value = "";
+
+  const mensajeIA = agregarMensaje("", "ia");
 
   try {
     const res = await fetch("/chat", {
@@ -176,11 +214,16 @@ async function enviar() {
 
     const data = await res.json();
 
-    agregarMensaje(data.response || "Sin respuesta.", "ia");
+    // ✅ CORRECCIÓN CLAVE AQUÍ
+    const texto = data.reply || "Sin respuesta.";
+
+    escribirTexto(mensajeIA, texto);
 
   } catch {
-    agregarMensaje("Error de conexión.", "ia");
+    mensajeIA.innerText = "Error de conexión.";
   }
+
+  enviando = false;
 }
 
 input.addEventListener("keypress", function(e) {

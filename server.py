@@ -9,9 +9,6 @@ client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 # 🧠 MODELOS (EXACTAMENTE COMO USTED QUIERE)
 MODELS = [
     "llama-3.3-70b-versatile",  # 🧠 principal (mejor balance)
-    "mixtral-8x7b-32768",       # ⚡ rápido y potente
-    "qwen/qwen3-32b",           # 🔄 alternativa sólida
-    "llama-3.1-8b-instant"      # 🚀 fallback ultra rápido
 ]
 
 chat_memory = []

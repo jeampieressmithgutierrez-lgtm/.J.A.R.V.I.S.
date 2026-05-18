@@ -96,26 +96,6 @@ button {
   cursor: pointer;
 }
 
-/* REACTOR */
-.reactor {
-  position: absolute;
-  bottom: 120px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  background: radial-gradient(circle, #00eaff, transparent);
-  box-shadow: 0 0 40px #00eaff;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% { transform: translateX(-50%) scale(1); }
-  50% { transform: translateX(-50%) scale(1.1); }
-  100% { transform: translateX(-50%) scale(1); }
-}
-
 /* GRID */
 .background-grid {
   position: absolute;
@@ -126,7 +106,100 @@ button {
   z-index: -1;
 }
 
-/* EFECTO ESCRIBIENDO */
+/* REACTOR ARC */
+.reactor {
+  position: absolute;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 200px;
+}
+
+/* NÚCLEO */
+.reactor::before {
+  content: "";
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, #00eaff, #0088ff, transparent);
+  border-radius: 50%;
+  box-shadow: 0 0 30px #00eaff, 0 0 60px #0088ff;
+  animation: pulseCore 1.8s infinite ease-in-out;
+}
+
+/* ANILLO EXTERNO */
+.reactor::after {
+  content: "";
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border: 2px solid rgba(0,234,255,0.4);
+  border-radius: 50%;
+  top: 10px;
+  left: 10px;
+  box-shadow: 0 0 20px #00eaff inset;
+  animation: rotate 6s linear infinite;
+}
+
+/* ANILLO INTERNO */
+.ring {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  top: 30px;
+  left: 30px;
+  border: 1px dashed rgba(0,234,255,0.6);
+  border-radius: 50%;
+  animation: rotateReverse 4s linear infinite;
+}
+
+/* LÍNEAS */
+.lines {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.lines span {
+  position: absolute;
+  width: 2px;
+  height: 20px;
+  background: #00eaff;
+  top: 0;
+  left: 50%;
+  transform-origin: bottom center;
+}
+
+.lines span:nth-child(1){transform:rotate(0deg) translateX(-50%)}
+.lines span:nth-child(2){transform:rotate(45deg) translateX(-50%)}
+.lines span:nth-child(3){transform:rotate(90deg) translateX(-50%)}
+.lines span:nth-child(4){transform:rotate(135deg) translateX(-50%)}
+.lines span:nth-child(5){transform:rotate(180deg) translateX(-50%)}
+.lines span:nth-child(6){transform:rotate(225deg) translateX(-50%)}
+.lines span:nth-child(7){transform:rotate(270deg) translateX(-50%)}
+.lines span:nth-child(8){transform:rotate(315deg) translateX(-50%)}
+
+/* ANIMACIONES */
+@keyframes pulseCore {
+  0%,100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.2); }
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes rotateReverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+/* ESCRITURA */
 .typing::after {
   content: "▋";
   animation: blink 1s infinite;
@@ -153,7 +226,14 @@ button {
   </div>
 </div>
 
-<div class="reactor"></div>
+<!-- REACTOR -->
+<div class="reactor">
+  <div class="ring"></div>
+  <div class="lines">
+    <span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span>
+  </div>
+</div>
 
 <script>
 const chat = document.getElementById("chat");
@@ -170,7 +250,6 @@ function agregarMensaje(texto, tipo) {
   return div;
 }
 
-// ✨ EFECTO ESCRITURA REAL
 function escribirTexto(elemento, texto, velocidad = 20) {
   elemento.innerText = "";
   elemento.classList.add("typing");
@@ -213,8 +292,6 @@ async function enviar() {
     });
 
     const data = await res.json();
-
-    // ✅ CORRECCIÓN CLAVE AQUÍ
     const texto = data.reply || "Sin respuesta.";
 
     escribirTexto(mensajeIA, texto);

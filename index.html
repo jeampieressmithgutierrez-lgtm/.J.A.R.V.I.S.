@@ -14,6 +14,16 @@ body {
   overflow: hidden;
 }
 
+/* FONDO GRID */
+.background-grid {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(#00eaff22 1px, transparent 1px);
+  background-size: 40px 40px;
+  z-index: 0;
+}
+
 /* CONTENEDOR */
 .container {
   width: 900px;
@@ -27,6 +37,8 @@ body {
   flex-direction: column;
   backdrop-filter: blur(10px);
   background: rgba(0,10,20,0.6);
+  position: relative;
+  z-index: 2;
 }
 
 /* HEADER */
@@ -92,143 +104,7 @@ button {
   cursor: pointer;
 }
 
-/* GRID */
-.background-grid {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background-image: radial-gradient(#00eaff22 1px, transparent 1px);
-  background-size: 40px 40px;
-  z-index: -1;
-}
-
-/* ========================= */
-/* REACTOR NIVEL STARK */
-/* ========================= */
-
-.reactor {
-  position: absolute;
-  bottom: 100px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 260px;
-  height: 260px;
-}
-
-/* NÚCLEO MEJORADO */
-.core {
-  position: absolute;
-  width: 80px;
-  height: 80px;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: radial-gradient(circle, #ffffff, #00eaff, #0066ff);
-  border-radius: 50%;
-  box-shadow:
-    0 0 30px #00eaff,
-    0 0 80px #0088ff,
-    0 0 160px #00eaff;
-  animation: energyPulse 2s infinite ease-in-out;
-}
-
-/* HALO EXTERNO */
-.halo {
-  position: absolute;
-  width: 220px;
-  height: 220px;
-  top: 20px;
-  left: 20px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(0,234,255,0.15), transparent 70%);
-  filter: blur(10px);
-}
-
-/* ANILLO PRINCIPAL */
-.ring-main {
-  position: absolute;
-  width: 200px;
-  height: 200px;
-  top: 30px;
-  left: 30px;
-  border-radius: 50%;
-  border: 3px solid rgba(0,234,255,0.3);
-  box-shadow: 0 0 30px #00eaff inset;
-  animation: rotate 12s linear infinite;
-}
-
-/* SEGMENTOS MÁS REALISTAS */
-.segment {
-  position: absolute;
-  width: 18px;
-  height: 70px;
-  background: linear-gradient(to bottom, #00eaff, transparent);
-  border: 1px solid rgba(0,234,255,0.6);
-  top: 50%;
-  left: 50%;
-  transform-origin: center -100px;
-  box-shadow: 0 0 12px #00eaff;
-}
-
-.segment:nth-child(1){transform: translate(-50%, -50%) rotate(0deg);}
-.segment:nth-child(2){transform: translate(-50%, -50%) rotate(60deg);}
-.segment:nth-child(3){transform: translate(-50%, -50%) rotate(120deg);}
-.segment:nth-child(4){transform: translate(-50%, -50%) rotate(180deg);}
-.segment:nth-child(5){transform: translate(-50%, -50%) rotate(240deg);}
-.segment:nth-child(6){transform: translate(-50%, -50%) rotate(300deg);}
-
-/* ANILLO INTERNO */
-.ring-inner {
-  position: absolute;
-  width: 140px;
-  height: 140px;
-  top: 60px;
-  left: 60px;
-  border-radius: 50%;
-  border: 2px dashed rgba(0,234,255,0.7);
-  animation: rotateReverse 6s linear infinite;
-}
-
-/* PARTÍCULAS */
-.particle {
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  background: #00eaff;
-  border-radius: 50%;
-  box-shadow: 0 0 10px #00eaff;
-  top: 50%;
-  left: 50%;
-  transform-origin: -80px 0;
-  animation: orbit 4s linear infinite;
-}
-
-.particle:nth-child(odd) {
-  animation-duration: 6s;
-}
-
-/* ANIMACIONES */
-@keyframes energyPulse {
-  0%,100% { box-shadow: 0 0 30px #00eaff, 0 0 80px #0088ff; }
-  50% { box-shadow: 0 0 60px #00eaff, 0 0 140px #0088ff; }
-}
-
-@keyframes rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes rotateReverse {
-  from { transform: rotate(360deg); }
-  to { transform: rotate(0deg); }
-}
-
-@keyframes orbit {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* ESCRITURA */
+/* CURSOR */
 .typing::after {
   content: "▋";
   animation: blink 1s infinite;
@@ -237,6 +113,14 @@ button {
 @keyframes blink {
   0%,100% { opacity: 0; }
   50% { opacity: 1; }
+}
+
+/* CANVAS 3D */
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
 }
 </style>
 </head>
@@ -255,32 +139,11 @@ button {
   </div>
 </div>
 
-<!-- REACTOR -->
-<div class="reactor">
-
-  <div class="halo"></div>
-
-  <div class="ring-main"></div>
-  <div class="ring-inner"></div>
-
-  <!-- SEGMENTOS -->
-  <div class="segment"></div>
-  <div class="segment"></div>
-  <div class="segment"></div>
-  <div class="segment"></div>
-  <div class="segment"></div>
-  <div class="segment"></div>
-
-  <!-- PARTÍCULAS -->
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
-  <div class="particle"></div>
-
-  <div class="core"></div>
-</div>
+<!-- THREE JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
 
 <script>
+// ================= CHAT =================
 const chat = document.getElementById("chat");
 const input = document.getElementById("input");
 
@@ -330,15 +193,12 @@ async function enviar() {
   try {
     const res = await fetch("/chat", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: mensaje })
     });
 
     const data = await res.json();
     escribirTexto(mensajeIA, data.reply || "Sin respuesta.");
-
   } catch {
     mensajeIA.innerText = "Error de conexión.";
   }
@@ -348,6 +208,83 @@ async function enviar() {
 
 input.addEventListener("keypress", function(e) {
   if (e.key === "Enter") enviar();
+});
+
+// ================= REACTOR 3D =================
+
+const scene = new THREE.Scene();
+
+const camera = new THREE.PerspectiveCamera(
+  75,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  1000
+);
+
+const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// LUCES
+const light = new THREE.PointLight(0x00eaff, 3, 100);
+light.position.set(0, 0, 10);
+scene.add(light);
+
+scene.add(new THREE.AmbientLight(0x222244));
+
+// NÚCLEO
+const core = new THREE.Mesh(
+  new THREE.SphereGeometry(1.2, 32, 32),
+  new THREE.MeshStandardMaterial({
+    color: 0x00eaff,
+    emissive: 0x00eaff,
+    emissiveIntensity: 2
+  })
+);
+scene.add(core);
+
+// ANILLOS
+const ring1 = new THREE.Mesh(
+  new THREE.TorusGeometry(3, 0.2, 16, 100),
+  new THREE.MeshStandardMaterial({
+    color: 0x00eaff,
+    emissive: 0x0088ff
+  })
+);
+scene.add(ring1);
+
+const ring2 = new THREE.Mesh(
+  new THREE.TorusGeometry(2, 0.1, 16, 100),
+  new THREE.MeshStandardMaterial({
+    color: 0x00eaff,
+    emissive: 0x00eaff
+  })
+);
+ring2.rotation.x = Math.PI / 2;
+scene.add(ring2);
+
+camera.position.z = 8;
+
+// ANIMACIÓN
+function animate() {
+  requestAnimationFrame(animate);
+
+  ring1.rotation.z += 0.01;
+  ring2.rotation.x += 0.015;
+
+  core.material.emissiveIntensity =
+    1.5 + Math.sin(Date.now() * 0.005) * 0.5;
+
+  renderer.render(scene, camera);
+}
+
+animate();
+
+// RESPONSIVE
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
 });
 </script>
 

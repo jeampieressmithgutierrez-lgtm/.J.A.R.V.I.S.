@@ -193,12 +193,12 @@ input.addEventListener("keypress", e => {
   if (e.key === "Enter") enviar();
 });
 
-// ================= REACTOR ARC 3D (MEJORADO) =================
+// ================= REACTOR ARC 3D =================
 
 const scene = new THREE.Scene();
 
 const camera = new THREE.PerspectiveCamera(
-  60,
+  75,
   window.innerWidth / window.innerHeight,
   0.1,
   1000
@@ -206,138 +206,107 @@ const camera = new THREE.PerspectiveCamera(
 
 const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.toneMapping = THREE.ACESFilmicToneMapping; 
-renderer.toneMappingExposure = 1.2;
 document.body.appendChild(renderer.domElement);
 
-// --- ILUMINACIÓN AVANZADA ---
-const ambientLight = new THREE.AmbientLight(0x0a1520, 1.5);
-scene.add(ambientLight);
+// LUCES
+const light = new THREE.PointLight(0x00eaff, 4, 100);
+light.position.set(0, 0, 10);
+scene.add(light);
 
-const dirLight = new THREE.DirectionalLight(0xffffff, 2);
-dirLight.position.set(5, 5, 5);
-scene.add(dirLight);
+scene.add(new THREE.AmbientLight(0x111122));
 
-const reactorLight = new THREE.PointLight(0x00f0ff, 5, 15);
-reactorLight.position.set(0, 0, 1);
-scene.add(reactorLight);
+// NÚCLEO
+const core = new THREE.Mesh(
+  new THREE.SphereGeometry(1.2, 64, 64),
+  new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    emissive: 0x00eaff,
+    emissiveIntensity: 3
+  })
+);
+scene.add(core);
 
-// --- MATERIALES REALISTAS ---
-const chromeMaterial = new THREE.MeshStandardMaterial({
-  color: 0xdddddd,
-  metalness: 0.9,
-  roughness: 0.15
-});
+// ANILLO EXTERNO
+const outerRing = new THREE.Mesh(
+  new THREE.TorusGeometry(4, 0.25, 32, 200),
+  new THREE.MeshStandardMaterial({
+    color: 0x888888,
+    metalness: 1,
+    roughness: 0.3
+  })
+);
+scene.add(outerRing);
 
-const copperMaterial = new THREE.MeshStandardMaterial({
-  color: 0xd47a2a,
-  metalness: 0.8,
-  roughness: 0.3
-});
+// ANILLO INTERNO
+const innerRing = new THREE.Mesh(
+  new THREE.TorusGeometry(2.5, 0.15, 32, 200),
+  new THREE.MeshStandardMaterial({
+    color: 0x00eaff,
+    emissive: 0x00eaff,
+    emissiveIntensity: 1
+  })
+);
+scene.add(innerRing);
 
-const darkMetalMaterial = new THREE.MeshStandardMaterial({
-  color: 0x222222,
-  metalness: 0.8,
-  roughness: 0.5
-});
+// BRAZOS
+for (let i = 0; i < 6; i++) {
+  const angle = (i / 6) * Math.PI * 2;
 
-const glassMaterial = new THREE.MeshPhysicalMaterial({
-  color: 0x99f6ff,
-  transparent: true,
-  opacity: 0.4,
-  roughness: 0.1,
-  transmission: 0.6, 
-  thickness: 0.5
-});
+  const arm = new THREE.Mesh(
+    new THREE.BoxGeometry(0.3, 3, 0.3),
+    new THREE.MeshStandardMaterial({
+      color: 0xaaaaaa,
+      metalness: 1,
+      roughness: 0.4
+    })
+  );
 
-const glowMaterial = new THREE.MeshStandardMaterial({
-  color: 0xffffff,
-  emissive: 0x00eaff,
-  emissiveIntensity: 4
-});
+  arm.position.x = Math.cos(angle) * 2.5;
+  arm.position.y = Math.sin(angle) * 2.5;
+  arm.rotation.z = angle;
 
-// --- CONSTRUCCIÓN DEL REACTOR ARC ---
-const arcReactorGroup = new THREE.Group();
-
-// 1. Núcleo Central de Energía
-const coreGlow = new THREE.Mesh(new THREE.TorusGeometry(0.8, 0.15, 16, 100), glowMaterial);
-arcReactorGroup.add(coreGlow);
-
-const coreGlass = new THREE.Mesh(new THREE.TorusGeometry(0.8, 0.2, 16, 100), glassMaterial);
-arcReactorGroup.add(coreGlass);
-
-// 2. Anillo de Soporte Trasero
-const baseRing = new THREE.Mesh(new THREE.TorusGeometry(2.4, 0.15, 16, 100), darkMetalMaterial);
-baseRing.position.z = -0.3;
-arcReactorGroup.add(baseRing);
-
-// 3. El Anillo Principal de Cobre
-const mainRing = new THREE.Mesh(new THREE.TorusGeometry(2.2, 0.25, 32, 100), copperMaterial);
-arcReactorGroup.add(mainRing);
-
-// 4. Bobinas / Segmentos de Cobre Alrededor del Anillo (10 piezas)
-const totalSegments = 10;
-for (let i = 0; i < totalSegments; i++) {
-  const angle = (i / totalSegments) * Math.PI * 2;
-  const segmentGroup = new THREE.Group();
-
-  const wireBlock = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, 0.6), copperMaterial);
-  wireBlock.position.set(Math.cos(angle) * 2.2, Math.sin(angle) * 2.2, 0);
-  wireBlock.rotation.z = angle;
-  segmentGroup.add(wireBlock);
-
-  const clamp = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.5, 0.7), chromeMaterial);
-  clamp.position.set(Math.cos(angle) * 2.2, Math.sin(angle) * 2.2, 0.05);
-  clamp.rotation.z = angle;
-  segmentGroup.add(clamp);
-
-  arcReactorGroup.add(segmentGroup);
+  scene.add(arm);
 }
 
-// 5. Malla y Brazos Estructurales Internos
-const innerStarSegments = 3;
-for (let i = 0; i < innerStarSegments; i++) {
-  const angle = (i / innerStarSegments) * Math.PI * 2;
-  
-  const metalArm = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.12, 0.15), chromeMaterial);
-  metalArm.position.set(Math.cos(angle) * 0.7, Math.sin(angle) * 0.7, -0.1);
-  metalArm.rotation.z = angle;
-  arcReactorGroup.add(metalArm);
+// FILAMENTOS
+for (let i = 0; i < 12; i++) {
+  const angle = (i / 12) * Math.PI * 2;
+
+  const filament = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.05, 0.05, 4, 16),
+    new THREE.MeshStandardMaterial({
+      color: 0xffaa33,
+      emissive: 0xff8800,
+      emissiveIntensity: 1.5
+    })
+  );
+
+  filament.rotation.z = Math.PI / 2;
+  filament.position.x = Math.cos(angle) * 1.8;
+  filament.position.y = Math.sin(angle) * 1.8;
+
+  scene.add(filament);
 }
 
-// 6. Aro de Protección Cromado Superior
-const topRim = new THREE.Mesh(new THREE.TorusGeometry(2.45, 0.06, 16, 100), chromeMaterial);
-topRim.position.z = 0.25;
-arcReactorGroup.add(topRim);
+camera.position.z = 10;
 
-scene.add(arcReactorGroup);
-
-// Posición de la cámara e inclinación inicial
-camera.position.z = 7;
-arcReactorGroup.rotation.x = 0.3; 
-arcReactorGroup.rotation.y = -0.2;
-
-// --- ANIMACIÓN ---
+// ANIMACIÓN
 function animate() {
   requestAnimationFrame(animate);
 
-  // Rotación fluida tridimensional
-  arcReactorGroup.rotation.z += 0.005;
+  outerRing.rotation.z += 0.01;
+  innerRing.rotation.x += 0.015;
+  scene.rotation.z += 0.002;
 
-  // Bamboleo sutil para resaltar la profundidad
-  arcReactorGroup.rotation.y = -0.2 + Math.sin(Date.now() * 0.001) * 0.05;
-
-  // Brillo pulsante azul
-  const pulse = 3 + Math.sin(Date.now() * 0.005) * 1.2;
-  glowMaterial.emissiveIntensity = pulse;
-  reactorLight.intensity = pulse * 1.5;
+  core.material.emissiveIntensity =
+    2 + Math.sin(Date.now() * 0.004) * 0.5;
 
   renderer.render(scene, camera);
 }
 
 animate();
 
-// --- RESPONSIVE ---
+// RESPONSIVE
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();

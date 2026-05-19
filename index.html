@@ -16,7 +16,7 @@ body {
 
 /* GRID */
 .background-grid {
-  position: absolute;
+  position: fixed;
   width: 100%;
   height: 100%;
   background-image: radial-gradient(#00eaff22 1px, transparent 1px);
@@ -24,42 +24,36 @@ body {
   z-index: 0;
 }
 
-/* CONTENEDOR */
+/* UI */
 .container {
   width: 900px;
   height: 90vh;
   margin: auto;
   margin-top: 3vh;
-  border: 1px solid rgba(0,255,255,0.2);
   border-radius: 15px;
-  box-shadow: 0 0 30px rgba(0,255,255,0.2);
-  display: flex;
-  flex-direction: column;
   backdrop-filter: blur(10px);
   background: rgba(0,10,20,0.6);
-  position: relative;
+  display: flex;
+  flex-direction: column;
   z-index: 2;
+  position: relative;
 }
 
-/* HEADER */
 .header {
   text-align: center;
   padding: 15px;
   font-size: 22px;
   letter-spacing: 6px;
-  font-weight: bold;
   color: #cfefff;
   text-shadow: 0 0 10px #00eaff;
 }
 
-/* CHAT */
 .chat {
   flex: 1;
   overflow-y: auto;
   padding: 20px;
 }
 
-/* MENSAJES */
 .mensaje {
   max-width: 60%;
   padding: 12px;
@@ -70,19 +64,16 @@ body {
 .usuario {
   margin-left: auto;
   background: rgba(0,255,255,0.1);
-  border: 1px solid #00eaff;
 }
 
 .ia {
   background: rgba(0,100,255,0.1);
-  border: 1px solid #00eaff;
 }
 
 /* INPUT */
 .input-area {
   display: flex;
   padding: 10px;
-  border-top: 1px solid rgba(0,255,255,0.2);
 }
 
 input {
@@ -90,37 +81,25 @@ input {
   padding: 12px;
   border-radius: 20px;
   border: none;
-  outline: none;
   background: #02131f;
   color: #00eaff;
 }
 
 button {
   margin-left: 10px;
-  border: none;
   border-radius: 50%;
   padding: 12px;
   background: #00eaff;
-  cursor: pointer;
+  border: none;
 }
 
-/* CURSOR */
-.typing::after {
-  content: "▋";
-  animation: blink 1s infinite;
-}
-
-@keyframes blink {
-  0%,100% { opacity: 0; }
-  50% { opacity: 1; }
-}
-
-/* CANVAS 3D */
+/* CANVAS */
 canvas {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   z-index: 1;
+  pointer-events: none;
 }
 </style>
 </head>
@@ -139,62 +118,10 @@ canvas {
   </div>
 </div>
 
-<!-- THREE JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
 
 <script>
-// ================= CHAT =================
-const chat = document.getElementById("chat");
-const input = document.getElementById("input");
-
-function agregarMensaje(texto, tipo) {
-  const div = document.createElement("div");
-  div.classList.add("mensaje", tipo);
-  div.innerText = texto;
-  chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
-  return div;
-}
-
-function escribirTexto(elemento, texto, velocidad = 20) {
-  elemento.innerText = "";
-  elemento.classList.add("typing");
-
-  let i = 0;
-  function escribir() {
-    if (i < texto.length) {
-      elemento.innerText += texto.charAt(i);
-      i++;
-      setTimeout(escribir, velocidad);
-    } else {
-      elemento.classList.remove("typing");
-    }
-  }
-  escribir();
-}
-
-// RESPUESTA LOCAL (SIN SERVIDOR)
-function respuestaIA(msg) {
-  return "Procesando: " + msg;
-}
-
-function enviar() {
-  const mensaje = input.value.trim();
-  if (!mensaje) return;
-
-  agregarMensaje(mensaje, "usuario");
-  input.value = "";
-
-  const mensajeIA = agregarMensaje("", "ia");
-  escribirTexto(mensajeIA, respuestaIA(mensaje));
-}
-
-input.addEventListener("keypress", e => {
-  if (e.key === "Enter") enviar();
-});
-
-// ================= REACTOR ARC 3D =================
-
+// ================= ESCENA =================
 const scene = new THREE.Scene();
 
 const camera = new THREE.PerspectiveCamera(
@@ -206,16 +133,22 @@ const camera = new THREE.PerspectiveCamera(
 
 const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x000000, 0);
+
 document.body.appendChild(renderer.domElement);
 
-// LUCES
+// ================= LUCES =================
 const light = new THREE.PointLight(0x00eaff, 4, 100);
 light.position.set(0, 0, 10);
 scene.add(light);
 
-scene.add(new THREE.AmbientLight(0x111122));
+scene.add(new THREE.AmbientLight(0x222244));
 
-// NÚCLEO
+// ================= GRUPO REACTOR =================
+const reactor = new THREE.Group();
+scene.add(reactor);
+
+// ================= NÚCLEO =================
 const core = new THREE.Mesh(
   new THREE.SphereGeometry(1.2, 64, 64),
   new THREE.MeshStandardMaterial({
@@ -224,94 +157,98 @@ const core = new THREE.Mesh(
     emissiveIntensity: 3
   })
 );
-scene.add(core);
+reactor.add(core);
 
-// ANILLO EXTERNO
-const outerRing = new THREE.Mesh(
-  new THREE.TorusGeometry(4, 0.25, 32, 200),
-  new THREE.MeshStandardMaterial({
-    color: 0x888888,
-    metalness: 1,
-    roughness: 0.3
-  })
-);
-scene.add(outerRing);
-
-// ANILLO INTERNO
-const innerRing = new THREE.Mesh(
-  new THREE.TorusGeometry(2.5, 0.15, 32, 200),
-  new THREE.MeshStandardMaterial({
-    color: 0x00eaff,
-    emissive: 0x00eaff,
-    emissiveIntensity: 1
-  })
-);
-scene.add(innerRing);
-
-// BRAZOS
-for (let i = 0; i < 6; i++) {
-  const angle = (i / 6) * Math.PI * 2;
-
-  const arm = new THREE.Mesh(
-    new THREE.BoxGeometry(0.3, 3, 0.3),
+// ================= ANILLOS =================
+function crearAnillo(radio, grosor, color) {
+  return new THREE.Mesh(
+    new THREE.TorusGeometry(radio, grosor, 32, 200),
     new THREE.MeshStandardMaterial({
-      color: 0xaaaaaa,
+      color: color,
+      emissive: color,
       metalness: 1,
-      roughness: 0.4
+      roughness: 0.2
     })
   );
-
-  arm.position.x = Math.cos(angle) * 2.5;
-  arm.position.y = Math.sin(angle) * 2.5;
-  arm.rotation.z = angle;
-
-  scene.add(arm);
 }
 
-// FILAMENTOS
-for (let i = 0; i < 12; i++) {
-  const angle = (i / 12) * Math.PI * 2;
+const ring1 = crearAnillo(3.5, 0.15, 0x00eaff);
+const ring2 = crearAnillo(2.5, 0.1, 0x0088ff);
+const ring3 = crearAnillo(1.8, 0.08, 0x00eaff);
 
-  const filament = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.05, 0.05, 4, 16),
+ring2.rotation.x = Math.PI / 2;
+ring3.rotation.y = Math.PI / 2;
+
+reactor.add(ring1, ring2, ring3);
+
+// ================= FILAMENTOS (ESTILO COBRE) =================
+for (let i = 0; i < 8; i++) {
+  const filo = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.05, 0.05, 3, 16),
     new THREE.MeshStandardMaterial({
-      color: 0xffaa33,
-      emissive: 0xff8800,
-      emissiveIntensity: 1.5
+      color: 0xff8800,
+      emissive: 0xff5500,
+      emissiveIntensity: 1.5,
+      metalness: 1
     })
   );
 
-  filament.rotation.z = Math.PI / 2;
-  filament.position.x = Math.cos(angle) * 1.8;
-  filament.position.y = Math.sin(angle) * 1.8;
+  filo.position.x = Math.cos(i * Math.PI / 4) * 2;
+  filo.position.y = Math.sin(i * Math.PI / 4) * 2;
+  filo.rotation.z = i * Math.PI / 4;
 
-  scene.add(filament);
+  reactor.add(filo);
 }
 
-camera.position.z = 10;
+// ================= CÁMARA =================
+camera.position.set(0, 0, 8);
+camera.lookAt(0, 0, 0);
 
-// ANIMACIÓN
+// ================= ANIMACIÓN =================
 function animate() {
   requestAnimationFrame(animate);
 
-  outerRing.rotation.z += 0.01;
-  innerRing.rotation.x += 0.015;
-  scene.rotation.z += 0.002;
+  reactor.rotation.y += 0.01;
+  reactor.rotation.x += 0.003;
 
   core.material.emissiveIntensity =
-    2 + Math.sin(Date.now() * 0.004) * 0.5;
+    2 + Math.sin(Date.now() * 0.005) * 1;
 
   renderer.render(scene, camera);
 }
 
 animate();
 
-// RESPONSIVE
+// ================= RESPONSIVE =================
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+// ================= CHAT =================
+const chat = document.getElementById("chat");
+const input = document.getElementById("input");
+
+function agregarMensaje(texto, tipo) {
+  const div = document.createElement("div");
+  div.classList.add("mensaje", tipo);
+  div.innerText = texto;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function enviar() {
+  const mensaje = input.value.trim();
+  if (!mensaje) return;
+
+  agregarMensaje(mensaje, "usuario");
+  input.value = "";
+
+  setTimeout(() => {
+    agregarMensaje("Procesando, señor...", "ia");
+  }, 500);
+}
 </script>
 
 </body>

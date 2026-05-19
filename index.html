@@ -14,7 +14,7 @@ body {
   overflow: hidden;
 }
 
-/* FONDO GRID */
+/* GRID */
 .background-grid {
   position: absolute;
   width: 100%;
@@ -147,8 +147,6 @@ canvas {
 const chat = document.getElementById("chat");
 const input = document.getElementById("input");
 
-let enviando = false;
-
 function agregarMensaje(texto, tipo) {
   const div = document.createElement("div");
   div.classList.add("mensaje", tipo);
@@ -175,47 +173,32 @@ function escribirTexto(elemento, texto, velocidad = 20) {
   escribir();
 }
 
-async function enviar() {
-  if (enviando) return;
-  enviando = true;
+// RESPUESTA LOCAL (SIN SERVIDOR)
+function respuestaIA(msg) {
+  return "Procesando: " + msg;
+}
 
+function enviar() {
   const mensaje = input.value.trim();
-  if (!mensaje) {
-    enviando = false;
-    return;
-  }
+  if (!mensaje) return;
 
   agregarMensaje(mensaje, "usuario");
   input.value = "";
 
   const mensajeIA = agregarMensaje("", "ia");
-
-  try {
-    const res = await fetch("/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: mensaje })
-    });
-
-    const data = await res.json();
-    escribirTexto(mensajeIA, data.reply || "Sin respuesta.");
-  } catch {
-    mensajeIA.innerText = "Error de conexión.";
-  }
-
-  enviando = false;
+  escribirTexto(mensajeIA, respuestaIA(mensaje));
 }
 
-input.addEventListener("keypress", function(e) {
+input.addEventListener("keypress", e => {
   if (e.key === "Enter") enviar();
 });
 
-// ================= REACTOR 3D =================
+// ================= REACTOR ARC 3D (MEJORADO) =================
 
 const scene = new THREE.Scene();
 
 const camera = new THREE.PerspectiveCamera(
-  75,
+  60,
   window.innerWidth / window.innerHeight,
   0.1,
   1000
@@ -223,64 +206,138 @@ const camera = new THREE.PerspectiveCamera(
 
 const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping; 
+renderer.toneMappingExposure = 1.2;
 document.body.appendChild(renderer.domElement);
 
-// LUCES
-const light = new THREE.PointLight(0x00eaff, 3, 100);
-light.position.set(0, 0, 10);
-scene.add(light);
+// --- ILUMINACIÓN AVANZADA ---
+const ambientLight = new THREE.AmbientLight(0x0a1520, 1.5);
+scene.add(ambientLight);
 
-scene.add(new THREE.AmbientLight(0x222244));
+const dirLight = new THREE.DirectionalLight(0xffffff, 2);
+dirLight.position.set(5, 5, 5);
+scene.add(dirLight);
 
-// NÚCLEO
-const core = new THREE.Mesh(
-  new THREE.SphereGeometry(1.2, 32, 32),
-  new THREE.MeshStandardMaterial({
-    color: 0x00eaff,
-    emissive: 0x00eaff,
-    emissiveIntensity: 2
-  })
-);
-scene.add(core);
+const reactorLight = new THREE.PointLight(0x00f0ff, 5, 15);
+reactorLight.position.set(0, 0, 1);
+scene.add(reactorLight);
 
-// ANILLOS
-const ring1 = new THREE.Mesh(
-  new THREE.TorusGeometry(3, 0.2, 16, 100),
-  new THREE.MeshStandardMaterial({
-    color: 0x00eaff,
-    emissive: 0x0088ff
-  })
-);
-scene.add(ring1);
+// --- MATERIALES REALISTAS ---
+const chromeMaterial = new THREE.MeshStandardMaterial({
+  color: 0xdddddd,
+  metalness: 0.9,
+  roughness: 0.15
+});
 
-const ring2 = new THREE.Mesh(
-  new THREE.TorusGeometry(2, 0.1, 16, 100),
-  new THREE.MeshStandardMaterial({
-    color: 0x00eaff,
-    emissive: 0x00eaff
-  })
-);
-ring2.rotation.x = Math.PI / 2;
-scene.add(ring2);
+const copperMaterial = new THREE.MeshStandardMaterial({
+  color: 0xd47a2a,
+  metalness: 0.8,
+  roughness: 0.3
+});
 
-camera.position.z = 8;
+const darkMetalMaterial = new THREE.MeshStandardMaterial({
+  color: 0x222222,
+  metalness: 0.8,
+  roughness: 0.5
+});
 
-// ANIMACIÓN
+const glassMaterial = new THREE.MeshPhysicalMaterial({
+  color: 0x99f6ff,
+  transparent: true,
+  opacity: 0.4,
+  roughness: 0.1,
+  transmission: 0.6, 
+  thickness: 0.5
+});
+
+const glowMaterial = new THREE.MeshStandardMaterial({
+  color: 0xffffff,
+  emissive: 0x00eaff,
+  emissiveIntensity: 4
+});
+
+// --- CONSTRUCCIÓN DEL REACTOR ARC ---
+const arcReactorGroup = new THREE.Group();
+
+// 1. Núcleo Central de Energía
+const coreGlow = new THREE.Mesh(new THREE.TorusGeometry(0.8, 0.15, 16, 100), glowMaterial);
+arcReactorGroup.add(coreGlow);
+
+const coreGlass = new THREE.Mesh(new THREE.TorusGeometry(0.8, 0.2, 16, 100), glassMaterial);
+arcReactorGroup.add(coreGlass);
+
+// 2. Anillo de Soporte Trasero
+const baseRing = new THREE.Mesh(new THREE.TorusGeometry(2.4, 0.15, 16, 100), darkMetalMaterial);
+baseRing.position.z = -0.3;
+arcReactorGroup.add(baseRing);
+
+// 3. El Anillo Principal de Cobre
+const mainRing = new THREE.Mesh(new THREE.TorusGeometry(2.2, 0.25, 32, 100), copperMaterial);
+arcReactorGroup.add(mainRing);
+
+// 4. Bobinas / Segmentos de Cobre Alrededor del Anillo (10 piezas)
+const totalSegments = 10;
+for (let i = 0; i < totalSegments; i++) {
+  const angle = (i / totalSegments) * Math.PI * 2;
+  const segmentGroup = new THREE.Group();
+
+  const wireBlock = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, 0.6), copperMaterial);
+  wireBlock.position.set(Math.cos(angle) * 2.2, Math.sin(angle) * 2.2, 0);
+  wireBlock.rotation.z = angle;
+  segmentGroup.add(wireBlock);
+
+  const clamp = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.5, 0.7), chromeMaterial);
+  clamp.position.set(Math.cos(angle) * 2.2, Math.sin(angle) * 2.2, 0.05);
+  clamp.rotation.z = angle;
+  segmentGroup.add(clamp);
+
+  arcReactorGroup.add(segmentGroup);
+}
+
+// 5. Malla y Brazos Estructurales Internos
+const innerStarSegments = 3;
+for (let i = 0; i < innerStarSegments; i++) {
+  const angle = (i / innerStarSegments) * Math.PI * 2;
+  
+  const metalArm = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.12, 0.15), chromeMaterial);
+  metalArm.position.set(Math.cos(angle) * 0.7, Math.sin(angle) * 0.7, -0.1);
+  metalArm.rotation.z = angle;
+  arcReactorGroup.add(metalArm);
+}
+
+// 6. Aro de Protección Cromado Superior
+const topRim = new THREE.Mesh(new THREE.TorusGeometry(2.45, 0.06, 16, 100), chromeMaterial);
+topRim.position.z = 0.25;
+arcReactorGroup.add(topRim);
+
+scene.add(arcReactorGroup);
+
+// Posición de la cámara e inclinación inicial
+camera.position.z = 7;
+arcReactorGroup.rotation.x = 0.3; 
+arcReactorGroup.rotation.y = -0.2;
+
+// --- ANIMACIÓN ---
 function animate() {
   requestAnimationFrame(animate);
 
-  ring1.rotation.z += 0.01;
-  ring2.rotation.x += 0.015;
+  // Rotación fluida tridimensional
+  arcReactorGroup.rotation.z += 0.005;
 
-  core.material.emissiveIntensity =
-    1.5 + Math.sin(Date.now() * 0.005) * 0.5;
+  // Bamboleo sutil para resaltar la profundidad
+  arcReactorGroup.rotation.y = -0.2 + Math.sin(Date.now() * 0.001) * 0.05;
+
+  // Brillo pulsante azul
+  const pulse = 3 + Math.sin(Date.now() * 0.005) * 1.2;
+  glowMaterial.emissiveIntensity = pulse;
+  reactorLight.intensity = pulse * 1.5;
 
   renderer.render(scene, camera);
 }
 
 animate();
 
-// RESPONSIVE
+// --- RESPONSIVE ---
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();

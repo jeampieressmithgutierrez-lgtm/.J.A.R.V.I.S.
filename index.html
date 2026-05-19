@@ -3,251 +3,215 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>J.A.R.V.I.S</title>
+<title>JARVIS AI</title>
 
 <style>
+:root {
+  --core: #ffae00;
+  --glow: #ff6a00;
+  --energy: #ffd000;
+  --deep: #ff4500;
+  --bg: #050505;
+}
+
 body {
   margin: 0;
-  font-family: "Segoe UI", sans-serif;
-  background: radial-gradient(circle at center, #02050a, #000);
-  color: #00eaff;
+  background: radial-gradient(circle, #000000, #050505);
+  font-family: Arial, sans-serif;
+  color: white;
   overflow: hidden;
 }
 
-/* GRID */
-.background-grid {
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  background-image: radial-gradient(#00eaff22 1px, transparent 1px);
-  background-size: 40px 40px;
-  z-index: 0;
-}
-
-/* UI */
+/* CONTENEDOR PRINCIPAL */
 .container {
-  width: 900px;
-  height: 90vh;
-  margin: auto;
-  margin-top: 3vh;
-  border-radius: 15px;
-  backdrop-filter: blur(10px);
-  background: rgba(0,10,20,0.6);
   display: flex;
   flex-direction: column;
-  z-index: 2;
-  position: relative;
+  height: 100vh;
+  justify-content: space-between;
+  align-items: center;
 }
 
+/* HEADER */
 .header {
+  width: 100%;
   text-align: center;
   padding: 15px;
-  font-size: 22px;
-  letter-spacing: 6px;
-  color: #cfefff;
-  text-shadow: 0 0 10px #00eaff;
+  font-size: 28px;
+  color: var(--energy);
+  text-shadow: 0 0 20px var(--glow);
 }
 
+/* CHAT */
 .chat {
-  flex: 1;
+  width: 90%;
+  max-width: 500px;
+  height: 40%;
   overflow-y: auto;
-  padding: 20px;
 }
 
-.mensaje {
-  max-width: 60%;
-  padding: 12px;
+.message {
   margin: 10px;
+  padding: 10px;
   border-radius: 10px;
 }
 
-.usuario {
-  margin-left: auto;
-  background: rgba(0,255,255,0.1);
+.user {
+  background: rgba(255, 170, 0, 0.2);
+  text-align: right;
 }
 
-.ia {
-  background: rgba(0,100,255,0.1);
+.bot {
+  background: rgba(255, 200, 0, 0.1);
 }
 
 /* INPUT */
 .input-area {
   display: flex;
-  padding: 10px;
+  width: 90%;
+  max-width: 500px;
+  margin-bottom: 20px;
 }
 
 input {
   flex: 1;
-  padding: 12px;
-  border-radius: 20px;
+  padding: 10px;
   border: none;
-  background: #02131f;
-  color: #00eaff;
+  outline: none;
+  background: black;
+  color: var(--energy);
 }
 
 button {
-  margin-left: 10px;
-  border-radius: 50%;
-  padding: 12px;
-  background: #00eaff;
+  padding: 10px 20px;
+  background: var(--core);
   border: none;
+  color: black;
+  cursor: pointer;
 }
 
-/* CANVAS */
-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1;
-  pointer-events: none;
+/* JARVIS CORE */
+.jarvis-container {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  margin: auto;
 }
+
+/* NUCLEO */
+.core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffd000 0%, #ff6a00 50%, #000 100%);
+  box-shadow:
+    0 0 30px #ffae00,
+    0 0 60px #ff6a00,
+    0 0 100px #ff4500;
+  animation: pulse 2s infinite;
+}
+
+/* ANILLOS */
+.ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  border: 2px solid rgba(255,170,0,0.3);
+  box-shadow: 0 0 20px var(--core);
+}
+
+.ring1 {
+  width: 200px;
+  height: 200px;
+  animation: rotate 10s linear infinite;
+}
+
+.ring2 {
+  width: 260px;
+  height: 260px;
+  animation: rotate 15s linear infinite reverse;
+}
+
+.ring3 {
+  width: 320px;
+  height: 320px;
+  animation: rotate 20s linear infinite;
+}
+
+/* ANIMACIONES */
+@keyframes rotate {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%,100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+}
+
 </style>
 </head>
 
 <body>
 
-<div class="background-grid"></div>
-
 <div class="container">
-  <div class="header">J.A.R.V.I.S</div>
+
+  <div class="header">JARVIS AI</div>
+
+  <!-- ALMA DE JARVIS -->
+  <div class="jarvis-container">
+    <div class="ring ring1"></div>
+    <div class="ring ring2"></div>
+    <div class="ring ring3"></div>
+    <div class="core"></div>
+  </div>
+
+  <!-- CHAT -->
   <div class="chat" id="chat"></div>
 
+  <!-- INPUT -->
   <div class="input-area">
     <input id="input" placeholder="Hable, señor...">
-    <button onclick="enviar()">➤</button>
+    <button onclick="sendMessage()">➤</button>
   </div>
+
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
-
 <script>
-// ================= ESCENA =================
-const scene = new THREE.Scene();
+function sendMessage() {
+  const input = document.getElementById("input");
+  const chat = document.getElementById("chat");
 
-const camera = new THREE.PerspectiveCamera(
-  75,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  1000
-);
+  if (input.value.trim() === "") return;
 
-const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setClearColor(0x000000, 0);
+  // Mensaje usuario
+  const userMsg = document.createElement("div");
+  userMsg.className = "message user";
+  userMsg.innerText = input.value;
+  chat.appendChild(userMsg);
 
-document.body.appendChild(renderer.domElement);
-
-// ================= LUCES =================
-const light = new THREE.PointLight(0x00eaff, 4, 100);
-light.position.set(0, 0, 10);
-scene.add(light);
-
-scene.add(new THREE.AmbientLight(0x222244));
-
-// ================= GRUPO REACTOR =================
-const reactor = new THREE.Group();
-scene.add(reactor);
-
-// ================= NÚCLEO =================
-const core = new THREE.Mesh(
-  new THREE.SphereGeometry(1.2, 64, 64),
-  new THREE.MeshStandardMaterial({
-    color: 0xffffff,
-    emissive: 0x00eaff,
-    emissiveIntensity: 3
-  })
-);
-reactor.add(core);
-
-// ================= ANILLOS =================
-function crearAnillo(radio, grosor, color) {
-  return new THREE.Mesh(
-    new THREE.TorusGeometry(radio, grosor, 32, 200),
-    new THREE.MeshStandardMaterial({
-      color: color,
-      emissive: color,
-      metalness: 1,
-      roughness: 0.2
-    })
-  );
-}
-
-const ring1 = crearAnillo(3.5, 0.15, 0x00eaff);
-const ring2 = crearAnillo(2.5, 0.1, 0x0088ff);
-const ring3 = crearAnillo(1.8, 0.08, 0x00eaff);
-
-ring2.rotation.x = Math.PI / 2;
-ring3.rotation.y = Math.PI / 2;
-
-reactor.add(ring1, ring2, ring3);
-
-// ================= FILAMENTOS (ESTILO COBRE) =================
-for (let i = 0; i < 8; i++) {
-  const filo = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.05, 0.05, 3, 16),
-    new THREE.MeshStandardMaterial({
-      color: 0xff8800,
-      emissive: 0xff5500,
-      emissiveIntensity: 1.5,
-      metalness: 1
-    })
-  );
-
-  filo.position.x = Math.cos(i * Math.PI / 4) * 2;
-  filo.position.y = Math.sin(i * Math.PI / 4) * 2;
-  filo.rotation.z = i * Math.PI / 4;
-
-  reactor.add(filo);
-}
-
-// ================= CÁMARA =================
-camera.position.set(0, 0, 8);
-camera.lookAt(0, 0, 0);
-
-// ================= ANIMACIÓN =================
-function animate() {
-  requestAnimationFrame(animate);
-
-  reactor.rotation.y += 0.01;
-  reactor.rotation.x += 0.003;
-
-  core.material.emissiveIntensity =
-    2 + Math.sin(Date.now() * 0.005) * 1;
-
-  renderer.render(scene, camera);
-}
-
-animate();
-
-// ================= RESPONSIVE =================
-window.addEventListener("resize", () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-// ================= CHAT =================
-const chat = document.getElementById("chat");
-const input = document.getElementById("input");
-
-function agregarMensaje(texto, tipo) {
-  const div = document.createElement("div");
-  div.classList.add("mensaje", tipo);
-  div.innerText = texto;
-  chat.appendChild(div);
-  chat.scrollTop = chat.scrollHeight;
-}
-
-function enviar() {
-  const mensaje = input.value.trim();
-  if (!mensaje) return;
-
-  agregarMensaje(mensaje, "usuario");
-  input.value = "";
-
+  // Respuesta fake Jarvis
+  const botMsg = document.createElement("div");
+  botMsg.className = "message bot";
+  botMsg.innerText = "Procesando solicitud, Señor...";
+  
   setTimeout(() => {
-    agregarMensaje("Procesando, señor...", "ia");
-  }, 500);
+    botMsg.innerText = "Respuesta generada correctamente.";
+  }, 1000);
+
+  chat.appendChild(botMsg);
+
+  input.value = "";
+  chat.scrollTop = chat.scrollHeight;
 }
 </script>
 
